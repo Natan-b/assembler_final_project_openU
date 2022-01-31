@@ -124,7 +124,7 @@ void check_file(char *file_name)
 	print_table(hash_table);
 	fclose(asembler_file);
 	fclose(preprocess_file);
-	compile_file(preprocess_file_name); /*send to function for compilation*/
+	compile_file(preprocess_file_name); /*send to compile.c for compilation*/
 }
 
 int check_line(char *line, char *macro_name, char * word_check)
