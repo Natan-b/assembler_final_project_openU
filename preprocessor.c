@@ -1,4 +1,14 @@
+#include "preprocessor.h"
+#include "general_functions.h"
+#include "hash.h"
+#include "struct.h"
+#include "constants.h"
 #include "compile.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 /* add free nod list and char words */
 
@@ -114,6 +124,7 @@ void check_file(char *file_name)
 	print_table(hash_table);
 	fclose(asembler_file);
 	fclose(preprocess_file);
+	compile_file(preprocess_file_name); /*send to function for compilation*/
 }
 
 int check_line(char *line, char *macro_name, char * word_check)
@@ -123,7 +134,7 @@ int check_line(char *line, char *macro_name, char * word_check)
 	i=0;
 	j=0;
 	/* get first words in line */
-	while(line[i]!=' ')
+	while(line[i]!=' ' && line[i] !='\t')
 		word[j++]=line[i++];
 	word[j]='\0';
 
@@ -144,123 +155,7 @@ int check_line(char *line, char *macro_name, char * word_check)
 		return NOT_FIND;
 }
 
-int spaceOrTab(char c)
-{
-	return (c == ' ') || (c == '\t');
-}
-
-void clean_line(char * s, char * d)
-{
-
-	int i = 0, j = 0;
-	while ((s[i] != '\0') && spaceOrTab(s[i]))
-	{
-		i++;
-	}
-	while ((s[i] != '\0') && (s[i] != '\n'))
-	{
-		d[j++] = s[i++];
-	}
-	d[j] = '\0';
-}
-
-
-unsigned int hash(char * macro_name)
-{
-	int length= strlen(macro_name);
-	int i;	
-	unsigned int hash_value = 0;
-	for(i=0;i<length;i++)
-		{
-			hash_value+=macro_name[i];
-			hash_value = (hash_value * macro_name[i] % HASHSIZE);
-		}
-	return hash_value;
-}
-
-/*void init_hash_table()
-{
-	int i;
-	for(i=0;i<HASHSIZE;i++)
-		hashtab[i]=NULL;
-} */
-
-void print_table(macro_name_node ** hash_table)
-{
-	macro_name_node *head;
-	macro_name_node *cur;
-	int i;
-	for(i=0;i<HASHSIZE;i++)
-		{
-			head = hash_table[i];
-		
-			printf("%d: ",i);
-
-			if(head==NULL)
-				printf("NULL");
-			else
-				{
-					cur = head;
-					while(cur != NULL)
-						{
-							printf("\n%s\n", cur->macro_line);
-							cur = cur->next;
-						}
-				}
-			printf("\n");
-		}	
-}
 
 
 
-void hash_table_insert(macro_name_node ** hash_table,char * macro_name, char * macro_line)
-{
-	macro_name_node *head;
-	unsigned int hash_value;
-	
-	hash_value = hash(macro_name);
-	
-	if(hash_table[hash_value] == NULL)
-		{
-			hash_table[hash_value] = malloc(sizeof (macro_name_node *));
-			
-			head = NULL;
-			insert_new_line(&head , macro_line);
-
-			hash_table[hash_value]= head;
-		}
-
-	else
-		{
-			head = hash_table[hash_value];
-			insert_new_line(&head , macro_line);
-		
-			hash_table[hash_value]=head;
-		}
-}
-
-void insert_new_line(macro_name_node ** head,char * new_line)
-{
-	macro_name_node * cur = *head;	
-	macro_name_node * new_macro_line = (macro_name_node*)malloc(sizeof(macro_name_node));
-	strcpy(new_macro_line->macro_line,new_line);
-	new_macro_line->next = NULL;
-	if(*head == NULL)
-		*head = new_macro_line;
-
-	else 
-		{
-			while(cur->next !=NULL)
-				cur = cur->next;
-			cur->next = new_macro_line;
-		}
-
-}
-
-
-macro_name_node ** creat_hash_table()
-{
-	macro_name_node ** hash_table = malloc(HASHSIZE * sizeof(macro_name_node *));
-	return	hash_table;
-}
 
