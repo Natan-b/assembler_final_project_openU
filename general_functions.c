@@ -18,7 +18,7 @@ void clean_line(char * s, char * d)
 	{
 		i++;
 	}
-	while ((s[i] != '\0') && (s[i] != '\n'))
+	while (s[i] != '\0')
 	{
 		d[j++] = s[i++];
 	}
