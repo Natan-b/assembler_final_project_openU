@@ -1,13 +1,7 @@
 #ifndef LIST_H
 #define LIST_H
 
-
-<<<<<<< HEAD
-<<<<<<< HEAD
+/*adds new symbol to symbol list*/
+void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr);
+void print_symbol_list(symbol_struct * cs);
 #endif
-=======
-#endif
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
-=======
-#endif
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2

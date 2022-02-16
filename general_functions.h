@@ -16,12 +16,4 @@ int is_number(char c);
 
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 #endif
-=======
-#endif
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
-=======
-#endif
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2

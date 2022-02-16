@@ -8,16 +8,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
 
 
 /* add free nod list and char words */
 
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
 
 
 void get_files(int number_of_files, char *file_names[])
@@ -33,9 +27,7 @@ void get_files(int number_of_files, char *file_names[])
 
 void check_file(char *file_name)
 {
-	int i;
 	int macroFlag= NOT_FIND;
-	int hash_table_creat_flag = NO;
 	int index;
 	char line[MAX_ONE_LINE];
 	char clear_line[MAX_ONE_LINE];
@@ -46,12 +38,11 @@ void check_file(char *file_name)
 	
 	FILE *asembler_file, *preprocess_file; 
 
-	macro_name_node ** hash_table= malloc(HASHSIZE * sizeof(macro_name_node *));;
+	macro_name_node ** hash_table;
 	macro_name_node *cur;
-	for(i=0;i<HASHSIZE;i++)
-		hash_table[i]=NULL;
-			
-	printf("\n------%p----\n",hash_table);
+	hash_table = NULL;
+	/* reset hash tab to be empty */
+	/*init_hash_table();*/
 	
 	
 	sprintf(asembler_file_name,"%s.as",file_name);
@@ -72,22 +63,18 @@ void check_file(char *file_name)
 			return;
 		}
 
-	while(1)
-		{	
+	while(!feof(asembler_file))
+		{
 			/* get new line from the file */
 			fgets(line,MAX_ONE_LINE,asembler_file);
-			if(feof(asembler_file)) break;
 			/* remove extra whitespaces and tabs */
 			clean_line(line,clear_line);
 			/* check if line have macro*/
 			macroFlag=check_line(clear_line,macro_name,"macro");
-			
 			/* get macro lines*/
 			if(macroFlag==FIND)
 				{	
-					if(hash_table_creat_flag==NO)
-							hash_table_creat_flag=YES;
-										
+					hash_table = creat_hash_table();					
 					macroFlag=NOT_FIND;
 					while(macroFlag==NOT_FIND)
 						{
@@ -113,11 +100,12 @@ void check_file(char *file_name)
 					else
 						{
 							index = hash(clear_line);
+							printf("%d %s\n",index,clear_line);
 							if(hash_table[index] != NULL) /* it is a macro line */
 								{
 									cur = hash_table[index];
 									while(cur != NULL)
-										{printf("\n----%d----\n",index);printf("\n----%s----\n",cur->macro_line);
+										{
 											fputs(cur->macro_line,preprocess_file);
 											fputs("\n",preprocess_file);
 											cur = cur->next;
@@ -134,17 +122,9 @@ void check_file(char *file_name)
 				}
 		}
 	print_table(hash_table);
-
-	if(hash_table_creat_flag==YES)
-			free_hash_table(hash_table);
-	free(*hash_table);		
-		
-printf("\n------%p----\n",*hash_table);
-	
-
 	fclose(asembler_file);
 	fclose(preprocess_file);
-	compile_file(preprocess_file_name); /*send to compile.c for compilation*/
+	compile_file(preprocess_file_name); /*send to function for compilation*/
 }
 
 int check_line(char *line, char *macro_name, char * word_check)
@@ -168,19 +148,14 @@ int check_line(char *line, char *macro_name, char * word_check)
 			while(line[i]!='\0' && line[i]!='\n')
 				macro_name[j++]=line[i++];
 			macro_name[j]='\0';
+			
 			return FIND;
 		}
 	else
 		return NOT_FIND;
 }
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
 
 
 
 
 
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2

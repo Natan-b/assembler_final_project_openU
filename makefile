@@ -14,12 +14,4 @@ struct.o: struct.c struct.h constants.h list.h
 	gcc struct.c -Wall -ansi -pedantic -c
 hash.o: hash.c hash.h constants.h list.h
 	gcc hash.c -Wall -ansi -pedantic -c
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-=======
 	
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
-=======
-	
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2

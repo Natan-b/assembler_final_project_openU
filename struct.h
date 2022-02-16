@@ -5,6 +5,7 @@
 
 
 
+
 typedef struct Node_name * ptr_macro_name;
 
 typedef struct Node_name{
@@ -12,11 +13,8 @@ typedef struct Node_name{
 	ptr_macro_name next;
 	}macro_name_node;
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 /*symbol struct*/
-typedef struct Symbol_struct * ptr;
-
+typedef struct Symbol_struct * symbol_ptr;
 typedef struct Symbol_struct {
 	char name[SYMBOL_MAX_LEN];
 	/*address of symbol*/
@@ -26,15 +24,14 @@ typedef struct Symbol_struct {
 	/*offset*/
 	int offset;
 	/*bits array for kind of symbol*/
-	int atrributes;
+	int kind;
 	/*pointer to next node*/
-	ptr next;
+	symbol_ptr next;
 } symbol_struct;
-=======
 
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
-=======
+/*create symbol struct function*/
+symbol_struct * create_symbol_struct();
 
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
+
 
 #endif

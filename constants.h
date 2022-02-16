@@ -4,11 +4,7 @@
 #define MAX_NAME_FILE 20
 #define MAX_ONE_LINE 80
 #define MAX_WORD 25
-<<<<<<< HEAD
-<<<<<<< HEAD
 #define SYMBOL_MAX_LEN 31
-
-enum {code, data, entry, external};
 
 /*command types enum*/
 typedef enum CommandType
@@ -31,14 +27,13 @@ typedef enum CommandType
 	STOP
 } CommandType;
 
-#endif
-=======
+typedef enum SymbolKind
+{
+	CODE_SYMBOLKIND = 1,
+	DATA_SYMBOLKIND = CODE_SYMBOLKIND << 1,
+	ENTRY_SYMBOLKIND = DATA_SYMBOLKIND << 1,
+	EXERNAL_SYMBOLKIND = ENTRY_SYMBOLKIND << 1
+} SymbolKind;
 
 
 #endif
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
-=======
-
-
-#endif
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2

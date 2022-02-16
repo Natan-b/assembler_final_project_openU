@@ -18,15 +18,7 @@ void clean_line(char * s, char * d)
 	{
 		i++;
 	}
-<<<<<<< HEAD
-<<<<<<< HEAD
-	while ((s[i] != '\0') && (s[i] != '\n'))
-=======
-	while (s[i] != '\0')
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
-=======
-	while (s[i] != '\0')
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
+	while (s[i] != '\0' && s[i] != '\n')
 	{
 		d[j++] = s[i++];
 	}
@@ -71,12 +63,4 @@ int is_number(char c)
 		return 1;
 	else
 		return 0;
-<<<<<<< HEAD
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
-=======
-}
->>>>>>> f7375110181730651ad2cfa6d0b1b039311907c2
