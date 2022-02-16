@@ -24,19 +24,13 @@ unsigned int hash(char * macro_name)
 	return hash_value;
 }
 
-/*void init_hash_table()
-{
-	int i;
-	for(i=0;i<HASHSIZE;i++)
-		hashtab[i]=NULL;
-} */
-
 
 void print_table(macro_name_node ** hash_table)
 {
 	macro_name_node *head;
 	macro_name_node *cur;
 	int i;
+	if(hash_table == NULL) return;
 	for(i=0;i<HASHSIZE;i++)
 		{
 			head = hash_table[i];
@@ -106,8 +100,25 @@ void insert_new_line(macro_name_node ** head,char * new_line)
 }
 
 
-macro_name_node ** creat_hash_table()
+void free_hash_table(macro_name_node ** hash_table)
 {
-	macro_name_node ** hash_table = malloc(HASHSIZE * sizeof(macro_name_node *));
-	return	hash_table;
+	if(hash_table!= NULL)
+		{
+			macro_name_node *head;
+			macro_name_node *temp;
+			int i;
+
+			for(i=0;i<HASHSIZE;i++)
+				{
+					head = hash_table[i];
+					while(head != NULL)
+						{							
+							temp = head;
+							head = head->next;
+							free(temp);
+						}
+				}
+			free(head);		
+		}
+
 }
