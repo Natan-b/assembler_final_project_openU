@@ -40,12 +40,11 @@ void check_file(char *file_name)
 	
 	FILE *asembler_file, *preprocess_file; 
 
-	macro_name_node ** hash_table= malloc(HASHSIZE * sizeof(macro_name_node *));;
 	macro_name_node *cur;
+	macro_name_node ** hash_table= malloc(HASHSIZE * sizeof(macro_name_node *));;
+	
 	for(i=0;i<HASHSIZE;i++)
 		hash_table[i]=NULL;
-			
-	printf("\n------%p----\n",hash_table);
 	
 	
 	sprintf(asembler_file_name,"%s.as",file_name);
@@ -62,7 +61,7 @@ void check_file(char *file_name)
 
 	if(preprocess_file== NULL)
 		{
-			printf("\ncannot open file %s\n", asembler_file_name);
+			printf("\ncannot open file %s\n", preprocess_file_name);
 			return;
 		}
 
@@ -111,7 +110,7 @@ void check_file(char *file_name)
 								{
 									cur = hash_table[index];
 									while(cur != NULL)
-										{printf("\n----%d----\n",index);printf("\n----%s----\n",cur->macro_line);
+										{
 											fputs(cur->macro_line,preprocess_file);
 											fputs("\n",preprocess_file);
 											cur = cur->next;
@@ -127,18 +126,15 @@ void check_file(char *file_name)
 
 				}
 		}
-	print_table(hash_table);
+	/*print_table(hash_table);*/
 
 	if(hash_table_creat_flag==YES)
 			free_hash_table(hash_table);
 	free(*hash_table);		
-		
-printf("\n------%p----\n",*hash_table);
-	
 
 	fclose(asembler_file);
 	fclose(preprocess_file);
-	compile_file(preprocess_file_name); /*send to compile.c for compilation*/
+	compile_file(file_name); /*send to compile.c for compilation*/
 }
 
 int check_line(char *line, char *macro_name, char * word_check)
