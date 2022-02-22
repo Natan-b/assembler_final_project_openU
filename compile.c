@@ -13,7 +13,7 @@
 
 int IC = 100;
 int DC = 0;
-symbol_struct * cs;
+/*symbol_struct * cs;*/
 
 /* a "table" of the info of each optional command */
 CommandInfo commandInfos[] =
@@ -63,26 +63,39 @@ char word[MAX_WORD];
 char preprocess_file_name[MAX_NAME_FILE];
 /*char c;*/
 int i = 0;
+int line_number = 0; /*count line from file to print if line have error*/
 
 FILE * fd;
+
+/*command_struct *command = malloc(sizeof (command_struct));
+data_struct *data = malloc(sizeof (data_struct));*/
 symbol_struct *cs = create_symbol_struct();
+
+command_struct *command = create_command_struct();
+data_struct *data = create_data_struct();
+
+/*init_command_struct(command);
+init_data_struct(data);*/
+
+print_command_list(command);/*debug printing*/
+print_data_list(data);/*debug printing*/
 
 sprintf(preprocess_file_name,"%s.am",file_name);
 fd = fopen(preprocess_file_name,"r");
 
 /*opening processed file*/
-/*fd = fopen("k1","r");*/
 
 	if(fd == NULL)
 	{
 		printf("\ncannot open file %s\n", file_name);
 		return;
 	}
-
+	printf("start file: %s\n",file_name);
 	while(!feof(fd))
-		{
+		{			
 			/* get new line from the file */
 			fgets(full_line,MAX_ONE_LINE,fd);
+			line_number++;
 			/* remove extra whitespaces and tabs from beginnig of string */
 			clean_line(full_line,line);
 			
@@ -104,6 +117,14 @@ fd = fopen(preprocess_file_name,"r");
 				
 		}	
 	print_symbol_list(cs);
+
+	free_command_list(command);
+	free_data_list(data);
+
+	print_command_list(command);
+	print_data_list(data);
+
+	printf("\nfinish file: %s\nnumber of line is file is %d",file_name,line_number); /*debug print*/
 	printf("\n\ncompile file works\n\n");
 }
 

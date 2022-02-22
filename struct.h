@@ -76,6 +76,7 @@ typedef struct Data_struct {
 } data_struct;
 
 /*Comand struct*/
+typedef struct command_struct * command_ptr;
 typedef struct command_struct {
 	char label[SYMBOL_MAX_LEN];
 	/*valid info for this command*/
@@ -86,11 +87,21 @@ typedef struct command_struct {
 	int address;
 	/*number of line the command take in file*/
 	int line_number;
+	/*pointer to next node*/
+	command_ptr next;
 } command_struct;
 
 /*create symbol struct function*/
 symbol_struct * create_symbol_struct();
 
+command_struct * create_command_struct();
+data_struct * create_data_struct();
+
+/*declaration init command struct*/
+/*void init_command_struct(command_struct *);*/
+
+/*declaration init data struct*/
+/*void init_data_struct(data_struct *);*/
 
 
 #endif

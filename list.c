@@ -86,7 +86,70 @@ void print_symbol_list(symbol_struct * cs)
 
 }
 
+/*debug printing*/
+void print_command_list(command_struct * command)
+{
 
+	if(command->next == NULL)
+	printf("\nCommand list is empty\n");
+
+	else
+		{
+			while(command)
+			{
+				printf("\ncommand->label: %s\ncommand->arguments_num: %d\ncommand->address: %d\ncommand->line_number: %d\n",command->label,command->arguments_num,command->address,command->line_number);
+				command = command->next;
+			}
+		}
+
+
+}
+
+/*debug printing*/
+void print_data_list(data_struct * data)
+{
+
+	if(data->next == NULL)
+	printf("\nData list is empty\n");
+
+	else
+		{
+			while(data)
+			{
+				printf("\ndata->name: %s\ndata->str_value: %s\ndata->int_values: %d\ndata->int_values_num: %d\ndata->address: %d\n",data->name,data->str_value,data->int_values[0],data->int_values_num,data->address);
+				data = data->next;
+			}
+		}
+}
+
+void free_command_list(command_struct * head)
+{
+	if(head!= NULL)
+		{			
+			command_struct *temp;
+			while(head != NULL)
+				{							
+					temp = head;
+					head = head->next;
+					free(temp);
+				}
+			
+		}
+}
+void free_data_list(data_struct * head)
+{
+	if(head!= NULL)
+		{			
+			data_struct *temp;
+			while(head != NULL)
+				{							
+					temp = head;
+					head = head->next;
+					free(temp);
+				}
+			free(head);
+		}
+}
 
 
 
