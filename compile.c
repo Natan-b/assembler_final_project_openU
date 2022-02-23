@@ -144,7 +144,7 @@ fd = fopen(preprocess_file_name,"r");
 
 	free_command_list(command);
 	free_data_list(data);
-	
+
 	print_command_list(command);
 	print_data_list(data);
 	
@@ -313,7 +313,7 @@ int analyze_data(char * line, char * word, int line_number,int label_flag)
 int analyze_cmd( char * line, char * word, int line_number,int label_flag)
 {
 int i =0;
-	
+int _is_cmd;	
 	if(label_flag)
 	{
 		while(line[i] != ':')
@@ -322,12 +322,31 @@ int i =0;
 		}
 			
 			i++; /*to get ot char agter ':'*/
+		if( (_is_cmd=is_cmd(word))==(-1) )
+			{
+				printf("==========\nthe command %s not found",word);
+				return 0;
+			}
+		
+			
+/*printf("==========\n%s\n%s\n%d\n%d\n=======",line,word,line_number,label_flag);*/
+		
 	}
 
 return 1;
 }
 
+int is_cmd(char *word)
+{
+int i;
 
+for(i=0; i<15; i++)
+	{
+		if(strcmp(word,commandInfos[i].commandName)==0)
+			return i;
+	}
+return -1;
+}
 
 	
 	

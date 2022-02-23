@@ -12,7 +12,7 @@ int is_external_def(char * word);
 void analyze_label_type(symbol_struct *cs, char * line, char * word, int * line_number);
 int analyze_data(char * line, char * word, int line_number,int label_flag);
 int analyze_cmd( char * line, char * word, int  line_number, int label_flag);
-
+int is_cmd(char *word);
 
 
 
