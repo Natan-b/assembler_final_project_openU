@@ -9,14 +9,14 @@
 /*creating symbol struct*/
 symbol_ptr create_symbol_struct()
 {
-	symbol_struct* cs = malloc(sizeof(symbol_struct));
-	cs->name[0] = '\0';
-	cs->value = 0;
-	cs->base_address = 0;
-	cs->offset = 0;
-	cs->kind = 0;
-	cs->next = NULL;
-	return cs;
+	symbol_struct* symbol = malloc(sizeof(symbol_struct));
+	symbol->name[0] = '\0';
+	symbol->value = 0;
+	symbol->base_address = 0;
+	symbol->offset = 0;
+	symbol->kind = 0;
+	symbol->next = NULL;
+	return symbol;
 }
 
 command_struct * create_command_struct()

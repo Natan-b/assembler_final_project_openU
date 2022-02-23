@@ -4,7 +4,7 @@
 #define MAX_NAME_FILE 20
 /* max line length */
 #define MAX_ONE_LINE 80
-#define MAX_WORD 25
+#define MAX_WORD 40
 #define SYMBOL_MAX_LEN 31
 /* max number of arguments */
 #define MAX_ARGUMENTS_NUMBER 2
@@ -53,10 +53,11 @@ typedef enum ArgumentKind
 
 typedef enum SymbolKind
 {
-	CODE_SYMBOLKIND = 1,
-	DATA_SYMBOLKIND = CODE_SYMBOLKIND << 1,
-	ENTRY_SYMBOLKIND = DATA_SYMBOLKIND << 1,
-	EXERNAL_SYMBOLKIND = ENTRY_SYMBOLKIND << 1
+	CODE_SYMBOLKIND,
+	DATA_SYMBOLKIND,
+	EXERNAL_SYMBOLKIND,
+	CODE_ENTRY_SYMBOLKIND,
+	DATA_ENTRY_SYMBOLKIND
 } SymbolKind;
 
 

@@ -13,7 +13,7 @@
 
 int IC = 100;
 int DC = 0;
-/*symbol_struct * cs;*/
+int ok = 1;
 
 /* a "table" of the info of each optional command */
 CommandInfo commandInfos[] =
@@ -61,21 +61,18 @@ char full_line[MAX_ONE_LINE];
 char line[MAX_ONE_LINE];
 char word[MAX_WORD];
 char preprocess_file_name[MAX_NAME_FILE];
-/*char c;*/
-int i = 0;
+int i;
+int label_flag;
 int line_number = 0; /*count line from file to print if line have error*/
 
 FILE * fd;
 
-/*command_struct *command = malloc(sizeof (command_struct));
-data_struct *data = malloc(sizeof (data_struct));*/
-symbol_struct *cs = create_symbol_struct();
-
+/*creatinf symbol,command and data lists*/
+symbol_struct *symbol = create_symbol_struct();
 command_struct *command = create_command_struct();
 data_struct *data = create_data_struct();
 
-/*init_command_struct(command);
-init_data_struct(data);*/
+
 
 print_command_list(command);/*debug printing*/
 print_data_list(data);/*debug printing*/
@@ -92,7 +89,9 @@ fd = fopen(preprocess_file_name,"r");
 	}
 	printf("start file: %s\n",file_name);
 	while(!feof(fd))
-		{			
+		{
+			i=0;
+			label_flag = 0;		
 			/* get new line from the file */
 			fgets(full_line,MAX_ONE_LINE,fd);
 			line_number++;
@@ -110,19 +109,45 @@ fd = fopen(preprocess_file_name,"r");
 			get_word(line,i,word); /*recieving word*/
 			
 			/*checking if first word is a label definition or external label definition*/
-			if(is_label_def(word) || (is_external_def(word)))
-				analyze_label_line(cs,line,word);
+			if(is_label_def(word,&line_number))
+			{
+				analyze_label_type(symbol,line,word, &line_number);
+				label_flag = 1;
 				
+				/*skipping to next char after ':'*/
+				while(line[i] != ':')
+				{
+					i++;
+				}
+				i++; 
+		
+				get_word(line,i,word); /*getting next word in line*/
+				/*printf("\n\n%s\n\n",word);*/
+			}
+			
+			if(word[0] == '.')
+			{
+				ok = ok && analyze_data(line,word,line_number,label_flag);
+			}
+			
+			ok = ok && analyze_cmd(line,word,line_number,label_flag);
+			
+				
+			
+			
+			
+		}		
 /*-------------------------------------------------------------------------*/
 				
-		}	
-	print_symbol_list(cs);
+			
+	print_symbol_list(symbol);
 
 	free_command_list(command);
 	free_data_list(data);
-
+	
 	print_command_list(command);
 	print_data_list(data);
+	
 
 	printf("\nfinish file: %s\nnumber of line is file is %d",file_name,line_number); /*debug print*/
 	printf("\n\ncompile file works\n\n");
@@ -166,7 +191,7 @@ int is_empty_line(char * line)
 		return 0;
 }
 
-int is_label_def(char * word)
+int is_label_def(char * word, int * line_number)
 {
 	int i = 0;
 	if((word[i] >= 'a' && word[i] <= 'z') || (word[i] >= 'A' && word[i] <= 'Z'))
@@ -178,12 +203,21 @@ int is_label_def(char * word)
 				i++;
 			}
 			
-		if(word[i] == ':')
+		if(word[i] == ':' && word[i+1] == '\0')
 		{
-			if(word[i+1] == '\0')
-			return 1;
+			/*checking if symbol is legal length*/
+			if(strlen(word) <= SYMBOL_MAX_LEN)
+				return 1;
+			else
+			{
+				printf("ERROR: in line %d symbol is too long", *line_number);
+				ok = 0;
+				return 0;
+			}
+			
+
 		}	
-		else
+		
 			return 0;
 			
 	}
@@ -204,6 +238,7 @@ int is_label(char * word)
 			
 		if(word[i] == '\0')
 		{
+			if(strlen(word) <= SYMBOL_MAX_LEN) /*checking if symbol is legal length*/
 			return 1;
 		}	
 		else
@@ -221,39 +256,79 @@ int is_external_def(char * word)
 		return 0;
 }
 
-void analyze_label_line(symbol_struct *cs, char * line, char * word)
+void analyze_label_type(symbol_struct *symbol, char * line, char * label, int * line_number)
 {
 	int i = 0;
+	char word[MAX_WORD];
 
-	/*if line is external label definition*/
-	if(is_external_def(word))
-	{
-		while(line[i] != 'n') /*skipping to char after word ".extern"*/
+	/*skipping to next char after ':'*/
+		while(line[i] != ':')
 		{
 			i++;
 		}
 		i++;
 		
-		/*receiving next word*/
-		get_word(line,i,word); 
-		/*checking to see if word after ".extern" is a label sign*/
-		if(is_label(word))
+		get_word(line,i,word); /*getting next word in line to determine type of label*/
+		
+		if(strcmp(word,".data") == 0)
 		{
-			insert_symbol(cs,word,0,2);
+			insert_symbol(symbol,label,IC,DATA_SYMBOLKIND);
 			return;
 		}
-		else
-		printf("\n\nERROR - word isn't legal label\n\n");
-	}
-	
-	insert_symbol(cs,word,IC,1);
+			
+		if(strcmp(word,".string") == 0)
+		{
+			insert_symbol(symbol,label,IC,DATA_SYMBOLKIND);
+			return;
+		}
+			
+		if(strcmp(word,".extern") == 0)
+		{
+			printf("\nWARNING: in line %d .extern command apears after label defenition\n", *line_number);
+			return;
+		}
+			
+		/*in any other case it is a code label line*/
+		insert_symbol(symbol,label,IC,CODE_SYMBOLKIND);
 }
 
 
-/*NEED TO TAKE CARE OF SYMBAL ATRIBUTES
-	FIND OUT WHY HE DID STRUCT OF BIT FIELDS FOR STRIBUTES
-		FREE SYMBOL LIST FUNCTIOIN
-*/
+int analyze_data(char * line, char * word, int line_number,int label_flag)
+{
+	int i =0;
+	
+	if(label_flag)
+	{
+		while(line[i] != ':')
+		{
+			i++;
+		}	
+			i++; /*to get ot char agter ':'*/
+	}
+	
+	return 1;
+}
+
+
+int analyze_cmd( char * line, char * word, int line_number,int label_flag)
+{
+int i =0;
+	
+	if(label_flag)
+	{
+		while(line[i] != ':')
+		{
+			i++;
+		}
+			
+			i++; /*to get ot char agter ':'*/
+	}
+
+return 1;
+}
+
+
+
 	
 	
 

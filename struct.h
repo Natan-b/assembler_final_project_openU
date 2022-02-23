@@ -23,7 +23,7 @@ typedef struct Symbol_struct {
 	/*offset*/
 	int offset;
 	/*bits array for kind of symbol*/
-	int kind;
+	SymbolKind kind;
 	/*pointer to next node*/
 	symbol_ptr next;
 } symbol_struct;

@@ -40,13 +40,13 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 		}
 		else
 		{
-			printf("\nERROR - symbol already exists in list\n");
+			printf("\nERROR1 - symbol already exists in list\n");
 			return;	
 		}
 	}
 	
 	/*making way to the end of the list while making sure symbol doesn't already exist*/
-	while(cur->next != NULL && (strcmp(cur->name,s_name) != 0)) /*CONTINUE HERE*/
+	while(cur->next != NULL && (strcmp(cur->name,s_name) != 0))
 	{
 		cur = cur->next; /*continue to next node*/
 	}
@@ -54,7 +54,7 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	/*if symbol already exists*/
 	if(strcmp(cur->name,s_name) == 0)
 	{
-		printf("\nERROR - symbol already exists in list\n");
+		printf("\nERROR2 - symbol already exists in list\n");
 		return;
 	}
 	
@@ -119,6 +119,21 @@ void print_data_list(data_struct * data)
 				printf("\ndata->name: %s\ndata->str_value: %s\ndata->int_values: %d\ndata->int_values_num: %d\ndata->address: %d\n",data->name,data->str_value,data->int_values[0],data->int_values_num,data->address);
 				data = data->next;
 			}
+		}
+}
+
+void free_symbol_list(symbol_struct * head)
+{
+	if(head!= NULL)
+		{			
+			symbol_struct *temp;
+			while(head != NULL)
+				{							
+					temp = head;
+					head = head->next;
+					free(temp);
+				}
+			free(head);
 		}
 }
 
