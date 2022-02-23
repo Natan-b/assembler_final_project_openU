@@ -70,6 +70,27 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	
 }
 
+void insert_command(command_struct * command,char * label,CommandInfo* commandInfo, int arguments_num, int address,int line_number)
+{
+	command_struct * cur;
+	cur=command;
+	if(cur==NULL)
+		{
+			cur=create_command_struct();
+			strcpy(cur->label,label);
+			cur->commandInfo=commandInfo;
+			cur->arguments_num=arguments_num;
+			cur->address=address;
+			cur->line_number=line_number;
+		}
+	else{
+
+		while(cur->next==NULL)
+			cur=cur->next;
+		
+ 	}
+}
+
 void print_symbol_list(symbol_struct * cs)
 {
 

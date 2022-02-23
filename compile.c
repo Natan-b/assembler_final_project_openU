@@ -69,12 +69,12 @@ FILE * fd;
 
 /*creatinf symbol,command and data lists*/
 symbol_struct *symbol = create_symbol_struct();
-command_struct *command = create_command_struct();
+command_struct *command = NULL;
 data_struct *data = create_data_struct();
 
 
 
-print_command_list(command);/*debug printing*/
+/*print_command_list(command);debug printing*/
 print_data_list(data);/*debug printing*/
 
 sprintf(preprocess_file_name,"%s.am",file_name);
@@ -130,7 +130,7 @@ fd = fopen(preprocess_file_name,"r");
 				ok = ok && analyze_data(line,word,line_number,label_flag);
 			}
 			
-			ok = ok && analyze_cmd(line,word,line_number,label_flag);
+			ok = ok && analyze_cmd(command,line,word,line_number,label_flag);
 			
 				
 			
@@ -145,7 +145,7 @@ fd = fopen(preprocess_file_name,"r");
 	free_command_list(command);
 	free_data_list(data);
 
-	print_command_list(command);
+	/*print_command_list(command);*/
 	print_data_list(data);
 	
 
@@ -310,10 +310,10 @@ int analyze_data(char * line, char * word, int line_number,int label_flag)
 }
 
 
-int analyze_cmd( char * line, char * word, int line_number,int label_flag)
+int analyze_cmd(command_struct * command, char * line, char * word, int line_number,int label_flag)
 {
 int i =0;
-int _is_cmd;	
+CommandInfo* commandInfo;	
 	if(label_flag)
 	{
 		while(line[i] != ':')
@@ -322,12 +322,13 @@ int _is_cmd;
 		}
 			
 			i++; /*to get ot char agter ':'*/
-		if( (_is_cmd=is_cmd(word))==(-1) )
+		commandInfo = is_cmd(word);
+		if(commandInfo == NULL )
 			{
 				printf("==========\nthe command %s not found",word);
 				return 0;
 			}
-		
+		/*TODO call func insert command struct */
 			
 /*printf("==========\n%s\n%s\n%d\n%d\n=======",line,word,line_number,label_flag);*/
 		
@@ -336,16 +337,16 @@ int _is_cmd;
 return 1;
 }
 
-int is_cmd(char *word)
+CommandInfo* is_cmd(char *word)
 {
 int i;
 
 for(i=0; i<15; i++)
 	{
 		if(strcmp(word,commandInfos[i].commandName)==0)
-			return i;
+			return &commandInfos[i];
 	}
-return -1;
+return NULL;
 }
 
 	
