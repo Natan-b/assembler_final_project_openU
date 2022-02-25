@@ -69,7 +69,7 @@ FILE * fd;
 
 /*creatinf symbol,command and data lists*/
 symbol_struct *symbol = create_symbol_struct();
-command_struct *command = NULL;
+command_struct *command = create_command_struct();
 data_struct *data = create_data_struct();
 
 
@@ -141,11 +141,11 @@ fd = fopen(preprocess_file_name,"r");
 				
 			
 	print_symbol_list(symbol);
+	print_command_list( command);
 
 	free_command_list(command);
 	free_data_list(data);
 
-	/*print_command_list(command);*/
 	print_data_list(data);
 	
 
@@ -329,7 +329,10 @@ CommandInfo* commandInfo;
 				return 0;
 			}
 		/*TODO call func insert command struct */
-			
+
+		insert_command(command,line,commandInfo,2,1000,2323);
+
+
 /*printf("==========\n%s\n%s\n%d\n%d\n=======",line,word,line_number,label_flag);*/
 		
 	}

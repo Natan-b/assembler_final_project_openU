@@ -70,24 +70,38 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	
 }
 
-void insert_command(command_struct * command,char * label,CommandInfo* commandInfo, int arguments_num, int address,int line_number)
+void insert_command(command_struct * head,char * label,CommandInfo* commandInfo, int arguments_num, int address,int line_number)
 {
-	command_struct * cur;
-	cur=command;
-	if(cur==NULL)
-		{
-			cur=create_command_struct();
+	command_struct * cur = head;
+
+	if(cur->next == NULL)
+		{ 				
+			/*insert data to new node */
 			strcpy(cur->label,label);
 			cur->commandInfo=commandInfo;
 			cur->arguments_num=arguments_num;
 			cur->address=address;
 			cur->line_number=line_number;
+			/*creat new node for command list */
+			cur->next = create_command_struct();
+			
 		}
 	else{
 
-		while(cur->next==NULL)
+		while(cur->next!=NULL)
 			cur=cur->next;
-		
+
+
+		/*insert data to new node */
+		strcpy(cur->label,label);
+		cur->commandInfo=commandInfo;
+		cur->arguments_num=arguments_num;
+		cur->address=address;
+		cur->line_number=line_number;
+
+
+		/* add the new node to the end of the list*/
+		cur->next = create_command_struct();
  	}
 }
 
@@ -108,18 +122,19 @@ void print_symbol_list(symbol_struct * cs)
 }
 
 /*debug printing*/
-void print_command_list(command_struct * command)
+void print_command_list(command_struct * head)
 {
+	command_struct * cur = head;
 
-	if(command->next == NULL)
+	if(cur->next == NULL)
 	printf("\nCommand list is empty\n");
 
 	else
 		{
-			while(command)
+			while(cur->next)
 			{
-				printf("\ncommand->label: %s\ncommand->arguments_num: %d\ncommand->address: %d\ncommand->line_number: %d\n",command->label,command->arguments_num,command->address,command->line_number);
-				command = command->next;
+				printf("\ncommand->label: %s\ncommand->name: %s\ncommand->arguments_num: %d\ncommand->address: %d\ncommand->line_number: %d\n",cur->label,cur->commandInfo->commandName,cur->arguments_num,cur->address,cur->line_number);
+				cur = cur->next;
 			}
 		}
 
