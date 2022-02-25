@@ -142,18 +142,19 @@ void print_command_list(command_struct * head)
 }
 
 /*debug printing*/
-void print_data_list(data_struct * data)
+void print_data_list(data_struct * head)
 {
+	data_struct * cur = head;
 
-	if(data->next == NULL)
+	if(cur->next == NULL)
 	printf("\nData list is empty\n");
 
 	else
 		{
-			while(data)
+			while(cur)
 			{
-				printf("\ndata->name: %s\ndata->str_value: %s\ndata->int_values: %d\ndata->int_values_num: %d\ndata->address: %d\n",data->name,data->str_value,data->int_values[0],data->int_values_num,data->address);
-				data = data->next;
+				printf("\ndata->name: %s\ndata->str_value: %s\ndata->int_values: %d\ndata->int_values_num: %d\ndata->address: %d\n",cur->name,cur->str_value,cur->int_values[0],cur->int_values_num,cur->address);
+				cur = cur->next;
 			}
 		}
 }
@@ -182,9 +183,9 @@ void free_command_list(command_struct * head)
 				{							
 					temp = head;
 					head = head->next;
-					free(temp);
+					temp->next=NULL;
+					free(temp);	
 				}
-			
 		}
 }
 void free_data_list(data_struct * head)
@@ -196,9 +197,9 @@ void free_data_list(data_struct * head)
 				{							
 					temp = head;
 					head = head->next;
+					temp->next=NULL;
 					free(temp);
 				}
-			free(head);
 		}
 }
 

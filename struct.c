@@ -45,25 +45,4 @@ data_struct * create_data_struct()
 }
 
 
-/*init command struct*/
-/*void init_command_struct(command_struct * command)
-{
-	command->label[0]='\0';
-	command->arguments_num=0;
-	command->address = 0;
-	command->line_number = 0;
-	command->next=NULL;
-	
 
-}*/
-
-/*init data struct*/
-/*void init_data_struct(data_struct *data)
-{
-	data->name[0]='\0'; 
-	data->str_value[0]='\0';
-	data->int_values[0]=0;
-	data->int_values_num=0;
-	data->address=0;
-	data->next=NULL;
-}*/

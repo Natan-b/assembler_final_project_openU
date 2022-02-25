@@ -147,6 +147,7 @@ fd = fopen(preprocess_file_name,"r");
 	free_data_list(data);
 
 	print_data_list(data);
+	print_command_list( command);
 	
 
 	printf("\nfinish file: %s\nnumber of line is file is %d",file_name,line_number); /*debug print*/
