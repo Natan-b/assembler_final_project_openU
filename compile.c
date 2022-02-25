@@ -72,11 +72,6 @@ symbol_struct *symbol = create_symbol_struct();
 command_struct *command = create_command_struct();
 data_struct *data = create_data_struct();
 
-
-
-/*print_command_list(command);debug printing*/
-print_data_list(data);/*debug printing*/
-
 sprintf(preprocess_file_name,"%s.am",file_name);
 fd = fopen(preprocess_file_name,"r");
 
@@ -141,17 +136,26 @@ fd = fopen(preprocess_file_name,"r");
 				
 			
 	print_symbol_list(symbol);
-	print_command_list( command);
+	print_command_list(command);
 
+	/*free_symbol_list(symbol);*/
 	free_command_list(command);
 	free_data_list(data);
-
+	
+	printf("\n=======after free func========\n");
+	
+	/*print_symbol_list(symbol);*/
+	print_command_list(command);	
 	print_data_list(data);
-	print_command_list( command);
+	
 	
 
-	printf("\nfinish file: %s\nnumber of line is file is %d",file_name,line_number); /*debug print*/
-	printf("\n\ncompile file works\n\n");
+	
+	fclose(fd);
+
+	printf("\nnumber of line is file is %d\nfinish file: %s\n",line_number,file_name); /*debug print*/
+	
+	printf("\n\n================================================\n\n");
 }
 
 /*copying first word from/after index i in 'from' array to 'to' array*/
@@ -326,12 +330,13 @@ CommandInfo* commandInfo;
 		commandInfo = is_cmd(word);
 		if(commandInfo == NULL )
 			{
-				printf("==========\nthe command %s not found",word);
+				printf("\n==========the command %s not found==========\n",word);
 				return 0;
 			}
-		/*TODO call func insert command struct */
+		/*TODO send the right argument of the argument number */
+		/*TODO take care of the IC counter*/
 
-		insert_command(command,line,commandInfo,2,1000,2323);
+		insert_command(command,line,commandInfo,2,IC,line_number);
 
 
 /*printf("==========\n%s\n%s\n%d\n%d\n=======",line,word,line_number,label_flag);*/
@@ -345,7 +350,7 @@ CommandInfo* is_cmd(char *word)
 {
 int i;
 
-for(i=0; i<15; i++)
+for(i=0; i<=15; i++)
 	{
 		if(strcmp(word,commandInfos[i].commandName)==0)
 			return &commandInfos[i];

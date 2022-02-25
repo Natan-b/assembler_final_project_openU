@@ -168,9 +168,9 @@ void free_symbol_list(symbol_struct * head)
 				{							
 					temp = head;
 					head = head->next;
+					temp->next=NULL;
 					free(temp);
 				}
-			free(head);
 		}
 }
 
