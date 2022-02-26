@@ -104,10 +104,15 @@ fd = fopen(preprocess_file_name,"r");
 			get_word(line,i,word); /*recieving word*/
 			
 			/*checking if first word is a label definition or external label definition*/
-			if(is_label_def(word,&line_number))
+			if(is_label_def(word,line_number))
 			{
-				analyze_label_type(symbol,line,word, &line_number);
-				label_flag = 1;
+				if(analyze_label_type(symbol,line,word, line_number))
+					label_flag = 1;
+				else
+				{
+					ok = 0;
+					continue; /*skip to next line in file*/
+				}
 				
 				/*skipping to next char after ':'*/
 				while(line[i] != ':')
@@ -122,7 +127,7 @@ fd = fopen(preprocess_file_name,"r");
 			
 			if(word[0] == '.')
 			{
-				ok = ok && analyze_data(line,word,line_number,label_flag);
+				ok = ok && analyze_data(line,word,line_number,label_flag,symbol);
 			}
 			
 			ok = ok && analyze_cmd(command,line,word,line_number,label_flag);
@@ -196,7 +201,7 @@ int is_empty_line(char * line)
 		return 0;
 }
 
-int is_label_def(char * word, int * line_number)
+int is_label_def(char * word, int line_number)
 {
 	int i = 0;
 	if((word[i] >= 'a' && word[i] <= 'z') || (word[i] >= 'A' && word[i] <= 'Z'))
@@ -215,16 +220,12 @@ int is_label_def(char * word, int * line_number)
 				return 1;
 			else
 			{
-				printf("ERROR: in line %d symbol is too long", *line_number);
+				printf("\nERROR (line %d): symbol definitiom is too long", line_number);
 				ok = 0;
 				return 0;
 			}
-			
-
 		}	
-		
-			return 0;
-			
+			return 0;	
 	}
 	return 0;
 }
@@ -253,18 +254,41 @@ int is_label(char * word)
 	return 0;
 }
 
-int is_external_def(char * word)
+int label_check(char * label)
 {
-	if(strcmp(word,".extern") == 0)
-		return 1;
-	else
+int i;
+
+		/*removing ':' sign from symbol (if there is one)*/
+	if(label[strlen(label)-1] == ':')
+		label[strlen(label)-1] = '\0';
+	
+	/*checking if label is a command name*/	
+	for(i=0;i<16;i++)
+	{
+		if(strcmp(commandInfos[i].commandName,label) == 0)
 		return 0;
+	}
+		
+	/*checking if label is a register name*/
+	if((strcmp(label,"r0") == 0) || (strcmp(label,"r1") == 0) || (strcmp(label,"r2") == 0) || (strcmp(label,"r3") == 0) || (strcmp(label,"r4") == 0) || (strcmp(label,"r5") == 0) || (strcmp(label,"r6") == 0) || (strcmp(label,"r7") == 0) || (strcmp(label,"r8") == 0) || (strcmp(label,"r9") == 0) || (strcmp(label,"r10") == 0) || (strcmp(label,"r11") == 0) || (strcmp(label,"r12") == 0) || (strcmp(label,"r13") == 0) || (strcmp(label,"r14") == 0) || (strcmp(label,"r15") == 0))
+		return 0;
+	
+	return 1;
 }
 
-void analyze_label_type(symbol_struct *symbol, char * line, char * label, int * line_number)
+
+
+int analyze_label_type(symbol_struct *symbol, char * line, char * label, int line_number)
 {
 	int i = 0;
 	char word[MAX_WORD];
+	
+		/*checking if label isn't a command\register name*/
+		if (label_check(label) == 0) 
+		{
+			printf("\nERROR (line %d): symbol name is a defined command/register name",line_number);
+				return 0;
+		}
 
 	/*skipping to next char after ':'*/
 		while(line[i] != ':')
@@ -277,28 +301,45 @@ void analyze_label_type(symbol_struct *symbol, char * line, char * label, int * 
 		
 		if(strcmp(word,".data") == 0)
 		{
-			insert_symbol(symbol,label,IC,DATA_SYMBOLKIND);
-			return;
+		
+			if(insert_symbol(symbol,label,DC,DATA_SYMBOLKIND))
+			return 1;
+			else
+			{
+				printf("\nERROR (line %d): symbol already exists in list",line_number);
+				return 0;
+			}
 		}
 			
 		if(strcmp(word,".string") == 0)
 		{
-			insert_symbol(symbol,label,IC,DATA_SYMBOLKIND);
-			return;
+			if(insert_symbol(symbol,label,DC,DATA_SYMBOLKIND))
+			return 1;
+			else
+			{
+				printf("\nERROR (line %d): symbol already exists in list",line_number);
+				return 0;
+			}
 		}
 			
 		if(strcmp(word,".extern") == 0)
 		{
-			printf("\nWARNING: in line %d .extern command apears after label defenition\n", *line_number);
-			return;
+			printf("\nWARNING (line %d): .extern command apears after label definition", line_number);
+			return 1;
 		}
 			
 		/*in any other case it is a code label line*/
-		insert_symbol(symbol,label,IC,CODE_SYMBOLKIND);
+		if(insert_symbol(symbol,label,IC,CODE_SYMBOLKIND))
+		return 1;
+		else
+		{
+			printf("\nERROR (line %d): symbol already exists in list",line_number);
+			return 0;
+		}
 }
 
 
-int analyze_data(char * line, char * word, int line_number,int label_flag)
+int analyze_data(char * line, char * word, int line_number,int label_flag,symbol_struct *symbol)
 {
 	int i =0;
 	
@@ -308,8 +349,47 @@ int analyze_data(char * line, char * word, int line_number,int label_flag)
 		{
 			i++;
 		}	
-			i++; /*to get ot char agter ':'*/
+			i++; /*to get to char after ':'*/
 	}
+	
+	/*if is entry label line*/
+	if(strcmp(word,".entry") == 0)
+		return 1;
+	
+	/*if is external label line*/
+	if(strcmp(word,".extern") == 0)
+	{
+		/*skipping ".extern" command*/
+		while(line[i] != 'n') 
+		{
+			i++;
+		}	
+			i++; /*to get to char after 'n'*/
+			
+		get_word(line,i,word); /*recieving potential symbol*/
+		
+		if(is_label(word))
+		{
+			if(label_check(word))
+			{
+				if(insert_symbol(symbol,word,0,EXERNAL_SYMBOLKIND))
+					return 1;
+				else
+				{
+				   printf("\nERROR (line %d): symbol already exists as local symbol",line_number);
+				   return 0;
+				}
+			}
+			else
+			{
+				printf("\nERROR (line %d): symbol name is a defined command/register name",line_number);
+				return 0;
+			}
+		}
+		printf("\nERROR (line %d): not a legal symbol name", line_number);
+		return 0;
+	}
+	
 	
 	return 1;
 }

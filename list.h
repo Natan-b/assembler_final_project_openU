@@ -2,7 +2,7 @@
 #define LIST_H
 
 /*adds new symbol to symbol list*/
-void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr);
+int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr);
 void insert_command(command_struct * ,char * ,CommandInfo*, int, int,int );
 void print_symbol_list(symbol_struct * cs);
 void print_command_list(command_struct *);/*debug printing*/

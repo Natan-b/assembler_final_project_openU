@@ -8,7 +8,7 @@
 
 
 
-void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
+int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 {
 
 	symbol_struct * cur = cs;
@@ -32,7 +32,7 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 				cur->offset = (s_value%16);
 				cur->base_address = (cur->value - cur->offset);
 				cur->kind = atr;
-				return;
+				return 1;
 			}
 			else
 			; /*do nothing*/
@@ -40,8 +40,13 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 		}
 		else
 		{
-			printf("\nERROR1 - symbol already exists in list\n");
-			return;	
+			if((atr == EXERNAL_SYMBOLKIND) && (cur->kind == EXERNAL_SYMBOLKIND))
+				return 1;
+			else
+				return 0;
+				
+			
+			return 0;	
 		}
 	}
 	
@@ -54,8 +59,13 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	/*if symbol already exists*/
 	if(strcmp(cur->name,s_name) == 0)
 	{
-		printf("\nERROR2 - symbol already exists in list\n");
-		return;
+		if((atr == EXERNAL_SYMBOLKIND) && (cur->kind == EXERNAL_SYMBOLKIND))
+				return 1;
+			else
+				return 0;
+				
+		
+		return 0;
 	}
 	
 	/*creating new node and adding node to the end of list*/
@@ -67,6 +77,7 @@ void insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	new->kind = atr;
 	new->next = NULL;
 	cur->next = new; /*adding node to symbol list*/
+	return 1;
 	
 }
 
