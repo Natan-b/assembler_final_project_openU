@@ -11,8 +11,7 @@
 #include <string.h>
 
 
-int IC = 100;
-int DC = 0;
+
 int ok = 1;
 
 /* a "table" of the info of each optional command */
@@ -64,7 +63,8 @@ char preprocess_file_name[MAX_NAME_FILE];
 int i;
 int label_flag;
 int line_number = 0; /*count line from file to print if line have error*/
-
+int IC = 100;
+int DC = 0;
 FILE * fd;
 
 /*creatinf symbol,command and data lists*/
@@ -100,13 +100,13 @@ fd = fopen(preprocess_file_name,"r");
 			get_word(line,i,word); /*recieving word*/
 
 			/*checking if line is a comment line*/
-			if(is_comment(command,line, word,line_number))
+			if(is_comment(command,line, word,line_number,&IC))
 			continue; /*will skip to the next line*/
 			
 			/*checking if first word is a label definition or external label definition*/
 			if(is_label_def(word,line_number))
 			{
-				if(analyze_label_type(symbol,line,word, line_number))
+				if(analyze_label_type(symbol,line,word, line_number,DC,&IC))
 					label_flag = 1;
 				else
 				{
@@ -130,7 +130,7 @@ fd = fopen(preprocess_file_name,"r");
 				ok = ok && analyze_data(line,word,line_number,label_flag,symbol);
 			}
 			
-			ok = ok && analyze_cmd(command,line,word,line_number,label_flag);
+			ok = ok && analyze_cmd(command,line,word,line_number,label_flag,&IC);
 			
 				
 			
@@ -182,7 +182,7 @@ void get_word(char * from,int i,char * to)
 
 
 /*function will check if line is a comment line*/
-int is_comment(command_struct * command,char * line, char * word, int line_number)
+int is_comment(command_struct * command,char * line, char * word, int line_number, int * IC)
 {
 	CommandInfo* commandInfo;
 	if(line[0] == ';')
@@ -198,7 +198,7 @@ int is_comment(command_struct * command,char * line, char * word, int line_numbe
 		/*TODO send the right argument of the argument number */
 		/*TODO take care of the IC counter*/
 
-		insert_command(command,line,commandInfo,2,IC,line_number);
+		insert_command(command,line,commandInfo,2,&IC,line_number);
 		return 0;
 	}
 		
@@ -291,7 +291,7 @@ int i;
 
 
 
-int analyze_label_type(symbol_struct *symbol, char * line, char * label, int line_number)
+int analyze_label_type(symbol_struct *symbol, char * line, char * label, int line_number, int DC, int * IC)
 {
 	int i = 0;
 	char word[MAX_WORD];
@@ -408,7 +408,7 @@ int analyze_data(char * line, char * word, int line_number,int label_flag,symbol
 }
 
 
-int analyze_cmd(command_struct * command, char * line, char * word, int line_number,int label_flag)
+int analyze_cmd(command_struct * command, char * line, char * word, int line_number,int label_flag, int * IC)
 {
 int i =0;
 CommandInfo* commandInfo;	
@@ -429,7 +429,7 @@ CommandInfo* commandInfo;
 		/*TODO send the right argument of the argument number */
 		/*TODO take care of the IC counter*/
 
-		insert_command(command,line,commandInfo,2,IC,line_number);
+		insert_command(command,line,commandInfo,2,&IC,line_number);
 
 
 /*printf("==========\n%s\n%s\n%d\n%d\n=======",line,word,line_number,label_flag);*/

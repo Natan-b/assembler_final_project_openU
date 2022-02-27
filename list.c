@@ -81,7 +81,7 @@ int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	
 }
 
-void insert_command(command_struct * head,char * label,CommandInfo* commandInfo, int arguments_num, int address,int line_number)
+void insert_command(command_struct * head,char * label,CommandInfo* commandInfo, int arguments_num, int** address,int line_number)
 {
 	command_struct * cur = head;
 
@@ -91,7 +91,7 @@ void insert_command(command_struct * head,char * label,CommandInfo* commandInfo,
 			strcpy(cur->label,label);
 			cur->commandInfo=commandInfo;
 			cur->arguments_num=arguments_num;
-			cur->address=address;
+			cur->address=(**address);
 			cur->line_number=line_number;
 			/*creat new node for command list */
 			cur->next = create_command_struct();
@@ -107,7 +107,7 @@ void insert_command(command_struct * head,char * label,CommandInfo* commandInfo,
 		strcpy(cur->label,label);
 		cur->commandInfo=commandInfo;
 		cur->arguments_num=arguments_num;
-		cur->address=address;
+		cur->address=(**address);
 		cur->line_number=line_number;
 
 
