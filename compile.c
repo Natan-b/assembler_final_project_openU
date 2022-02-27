@@ -129,7 +129,7 @@ fd = fopen(preprocess_file_name,"r");
 			{
 				ok = ok && analyze_data(line,word,line_number,label_flag,symbol);
 			}
-			
+			else
 			ok = ok && analyze_cmd(command,line,word,line_number,label_flag,&IC);
 			
 				
