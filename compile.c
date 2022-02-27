@@ -93,15 +93,15 @@ fd = fopen(preprocess_file_name,"r");
 			/* remove extra whitespaces and tabs from beginnig of string */
 			clean_line(full_line,line);
 			
-			/*checking if line is a comment line*/
-			if(is_comment(line))
-			continue; /*will skip to the next line*/
-			
 			/*checking if line is an empty line*/
 			if(is_empty_line(line))
 			continue; /*will skip to the next line*/
 			
 			get_word(line,i,word); /*recieving word*/
+
+			/*checking if line is a comment line*/
+			if(is_comment(command,line, word,line_number))
+			continue; /*will skip to the next line*/
 			
 			/*checking if first word is a label definition or external label definition*/
 			if(is_label_def(word,line_number))
@@ -182,13 +182,26 @@ void get_word(char * from,int i,char * to)
 
 
 /*function will check if line is a comment line*/
-int is_comment(char * line)
+int is_comment(command_struct * command,char * line, char * word, int line_number)
 {
+	CommandInfo* commandInfo;
 	if(line[0] == ';')
 	
 		return 1;
-	else
+	else {
+		commandInfo = is_cmd(word);
+		if(commandInfo == NULL )
+			{
+				printf("\n==========the command %s not found==========\n",word);
+				return 0;
+			}
+		/*TODO send the right argument of the argument number */
+		/*TODO take care of the IC counter*/
+
+		insert_command(command,line,commandInfo,2,IC,line_number);
 		return 0;
+	}
+		
 }
 
 
