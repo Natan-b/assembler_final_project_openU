@@ -13,7 +13,9 @@ int is_letter(char c);
 /*return 1 if number*/
 int is_number(char c);
 
+void move_left(char* str, int num);
 
+int get_number_from_string(char* num_str, int* succeded);
 
 
 #endif

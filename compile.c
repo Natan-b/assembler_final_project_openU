@@ -142,7 +142,7 @@ fd = fopen(preprocess_file_name,"r");
 			
 	print_symbol_list(symbol);
 	print_command_list(command);
-
+	/*TODO fix free_command list and print*/
 	/*free_symbol_list(symbol);*/
 	free_command_list(command);
 	free_data_list(data);
@@ -150,7 +150,7 @@ fd = fopen(preprocess_file_name,"r");
 	printf("\n=======after free func========\n");
 	
 	/*print_symbol_list(symbol);*/
-	print_command_list(command);	
+	/*print_command_list(command);*/	
 	print_data_list(data);
 	
 	
@@ -451,12 +451,152 @@ for(i=0; i<=15; i++)
 return NULL;
 }
 
-	
-	
+/*arrange the argument from the line, check for errors*/	
+int fill_arguments(int line_number, char* line, command_struct* command)
+{
+	int i = 0, j = 0, k;
+	while (line[i])
+	{
+		while ((line[i] != '\0') && spaceOrTab(line[i]))
+			i++;
+		if (line[i] == '\0')
+			break;
+		if (line[i] == ',')
+		{
+			if (j == 0)
+			{
+				printf("Extra comma before arguments, in line number %d",line_number);
+				return 0;
+			}
+			else
+			{
+				i++;
+			}
+			while ((line[i] != '\0') && spaceOrTab(line[i]))
+				i++;
+		}
+		k = 0;
+		while ((line[i] != '\0') && !spaceOrTab(line[i]) && (line[i] != ','))
+		{
+			command->arguments[j].argument_str[k] = line[i];
+			k++;
+			i++;
+		}
+		command->arguments[j].argument_str[k] = '\0';
+		if (strlen(command->arguments[j].argument_str) == 0)
+		{
+			printf("Empty argument. in line %d",line_number);
+			return 0;
+		}
+		if (!fill_addressing_mode(&command->arguments[j]))
+		{
+			printf("Bad addressing mode for argument. in line %d",line_number);
+			return 0;
+		}
+		j++;
+	}
+	if (j > 0)
+	{
+		command->arguments_num = j;
+	}
+	return 1;
+
+}	
+
+/*fill the adrresing mode each command contain*/
+int fill_addressing_mode(argument_struct* argument)
+{
+	if (fill_immediete_addressing_mode(argument))
+	{
+		return 1;
+	}
+	if (fill_register_addressing_mode(argument))
+	{
+		return 1;
+	}
+	if (fill_direct_addressing_mode(argument))
+	{
+		return 1;
+	}
+	if (fill_relative_addressing_mode(argument))
+	{
+		return 1;
+	}
+	return 0;
+}
+
+int fill_immediete_addressing_mode(argument_struct* argument)
+{
+	int succeded;
+	if (strlen(argument->argument_str) < 2)
+		return 0;
+	if (argument->argument_str[0] != '#')
+		return 0;
+	/*delete the # from the begin of the line*/
+	move_left(argument->argument_str, 1);
+	/* not use the returned value because this is just a check
+	if there is a number in argument */
+	get_number_from_string(argument->argument_str, &succeded);
+	if (succeded)
+		argument->addressingMode = IMMEDIETE;
+	return succeded;
+}
+
+int fill_register_addressing_mode(argument_struct* argument)
+{
+	int num, succeded;
+	if (strlen(argument->argument_str) != 2)
+		return 0;
+	if (argument->argument_str[0] != 'r')
+		return 0;
+	num = get_number_from_string(&argument->argument_str[1], &succeded);
+	if (!succeded)
+		return 0;
+	if ((num < 0) || (num > 7))
+		return 0;
+	/*clean and leave just the number of the argument*/
+	move_left(argument->argument_str, 1);
+	argument->addressingMode = REGISTER;
+	return 1;
+}
+
+int fill_direct_addressing_mode(argument_struct* argument)
+{
+	if (!symbol_is_legal(argument->argument_str))
+		return 0;
+	argument->addressingMode = DIRECT;
+	return 1;
+}
+
+int fill_relative_addressing_mode(argument_struct* argument)
+{
+	if (strlen(argument->argument_str) < 2)
+		return 0;
+	if (argument->argument_str[0] != '%')
+		return 0;
+	if (!symbol_is_legal(&argument->argument_str[1]))
+		return 0;
+	/* remove the %*/
+	move_left(argument->argument_str, 1);
+	argument->addressingMode = RELATIVE;
+	return 1;
+}
 
 
-
-
+int symbol_is_legal(char* name)
+{
+	int symbol_length = strlen(name), i;
+	if (symbol_length == 0)
+		return 0;
+	if (!is_letter(name[0]))
+		return 0;
+	for (i = 1; i < symbol_length; i++)
+	{
+		if (!is_letter(name[i]) && !is_number(name[i]))
+			return 0;
+	}
+	return 1;
+}
 
 
 

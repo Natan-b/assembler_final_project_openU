@@ -75,6 +75,12 @@ typedef struct Data_struct {
 	data_ptr next;
 } data_struct;
 
+/*struct for hold args that read from the file*/
+typedef struct argument_struct {
+	char argument_str[MAX_ARGUMENT_LEN];
+	AddressingMode addressingMode;
+} argument_struct;
+
 /*Comand struct*/
 typedef struct command_struct * command_ptr;
 typedef struct command_struct {
@@ -87,9 +93,12 @@ typedef struct command_struct {
 	int address;
 	/*number of line the command take in file*/
 	int line_number;
+	/* the arguments */
+	struct argument_struct arguments[MAX_ARGUMENTS_NUMBER];
 	/*pointer to next node*/
 	command_ptr next;
 } command_struct;
+
 
 /*create symbol struct function*/
 symbol_struct * create_symbol_struct();

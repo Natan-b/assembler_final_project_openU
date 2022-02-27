@@ -1,5 +1,6 @@
 #include "general_functions.h"
 #include <stdio.h>
+#include <string.h>
 
 
 
@@ -63,4 +64,24 @@ int is_number(char c)
 		return 1;
 	else
 		return 0;
+}
+
+void move_left(char* str, int num)
+{
+	int i, j, str_len;
+	for (i = 0; i < num; i++)
+	{
+		str_len = strlen(str);
+		for (j = 0; j < str_len; j++)
+		{
+			str[j] = str[j + 1];
+		}
+	}
+}
+
+int get_number_from_string(char* num_str, int* succeded)
+{
+	int num = 0;
+	*succeded = (sscanf(num_str, "%d", &num) == 1);
+	return num;
 }

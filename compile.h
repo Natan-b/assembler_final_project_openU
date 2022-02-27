@@ -12,6 +12,13 @@ int analyze_label_type(symbol_struct *cs, char * line, char * word, int  line_nu
 int analyze_data(char * line, char * word, int line_number,int label_flag, symbol_struct * symbol);
 int analyze_cmd(command_struct *, char * line, char * word, int  line_number, int label_flag, int * IC);
 CommandInfo* is_cmd(char *word);
+int fill_arguments(int line_number, char* line, command_struct* command);
+int fill_addressing_mode(argument_struct* argument);
+int fill_immediete_addressing_mode(argument_struct* argument);
+int fill_register_addressing_mode(argument_struct* argument);
+int fill_direct_addressing_mode(argument_struct* argument);
+int fill_relative_addressing_mode(argument_struct* argument);
+int symbol_is_legal(char* name);
 
 
 

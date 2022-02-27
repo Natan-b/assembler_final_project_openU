@@ -6,12 +6,15 @@
 #define MAX_ONE_LINE 80
 #define MAX_WORD 40
 #define SYMBOL_MAX_LEN 31
+/* max argument length */
+#define MAX_ARGUMENT_LEN 100
 /* max number of arguments */
 #define MAX_ARGUMENTS_NUMBER 2
 /*number of addressing modes*/
 #define ADDRESSING_MODES_NUM 4
 /* max number of integers in .data */
 #define MAX_INTS_IN_DATA 40
+
 
 
 /*command types enum*/

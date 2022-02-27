@@ -95,6 +95,11 @@ void insert_command(command_struct * head,char * label,CommandInfo* commandInfo,
 			cur->line_number=line_number;
 			/*creat new node for command list */
 			cur->next = create_command_struct();
+			if (cur->next == NULL)
+				{
+					printf("Failed to allocate command");
+					return ;
+				}
 			
 		}
 	else{
@@ -113,6 +118,11 @@ void insert_command(command_struct * head,char * label,CommandInfo* commandInfo,
 
 		/* add the new node to the end of the list*/
 		cur->next = create_command_struct();
+		if (cur->next == NULL)
+			{
+				printf("Failed to allocate command");
+				return ;
+			}
  	}
 }
 
