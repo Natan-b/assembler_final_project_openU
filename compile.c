@@ -106,7 +106,7 @@ fd = fopen(preprocess_file_name,"r");
 			/*checking if first word is a label definition or external label definition*/
 			if(is_label_def(word,line_number))
 			{
-				if(analyze_label_type(symbol,line,word, line_number,DC,&IC))
+				if(analyze_label_type(symbol,line,word, line_number,DC,IC))
 					label_flag = 1;
 				else
 				{
@@ -127,7 +127,7 @@ fd = fopen(preprocess_file_name,"r");
 			
 			if(word[0] == '.')
 			{
-				ok = ok && analyze_data(line,word,line_number,label_flag,symbol);
+				ok = ok && analyze_data(data,line,word,line_number,label_flag,symbol,&DC);
 			}
 			else
 			ok = ok && analyze_cmd(command,line,word,line_number,label_flag,&IC);
@@ -139,25 +139,24 @@ fd = fopen(preprocess_file_name,"r");
 		}		
 /*-------------------------------------------------------------------------*/
 				
-			
+	update_symbol_list(symbol,IC+1);
+	update_data_list(data,IC+1);		
 	print_symbol_list(symbol);
 	print_command_list(command);
+	print_data_list(data);
 	/*TODO fix free_command list and print*/
 	/*free_symbol_list(symbol);*/
 	free_command_list(command);
 	free_data_list(data);
 	
-	printf("\n=======after free func========\n");
-	
-	/*print_symbol_list(symbol);*/
-	/*print_command_list(command);*/	
+	printf("\n=======after free func========\n");	
 	print_data_list(data);
 	
 	
 
 	
 	fclose(fd);
-
+	printf("\n\nok is: %d\n",ok);
 	printf("\nnumber of line is file is %d\nfinish file: %s\n",line_number,file_name); /*debug print*/
 	
 	printf("\n\n================================================\n\n");
@@ -189,16 +188,16 @@ int is_comment(command_struct * command,char * line, char * word, int line_numbe
 	
 		return 1;
 	else {
-		commandInfo = is_cmd(word);
+		/*commandInfo = is_cmd(word);
 		if(commandInfo == NULL )
 			{
 				printf("\n==========the command %s not found==========\n",word);
 				return 0;
-			}
+			} */
 		/*TODO send the right argument of the argument number */
 		/*TODO take care of the IC counter*/
 
-		insert_command(command,line,commandInfo,2,&IC,line_number);
+		/*insert_command(command,line,commandInfo,2,&IC,line_number);*/
 		return 0;
 	}
 		
@@ -291,7 +290,7 @@ int i;
 
 
 
-int analyze_label_type(symbol_struct *symbol, char * line, char * label, int line_number, int DC, int * IC)
+int analyze_label_type(symbol_struct *symbol, char * line, char * label, int line_number, int DC, int IC)
 {
 	int i = 0;
 	char word[MAX_WORD];
@@ -340,6 +339,12 @@ int analyze_label_type(symbol_struct *symbol, char * line, char * label, int lin
 			printf("\nWARNING (line %d): .extern command apears after label definition", line_number);
 			return 1;
 		}
+		
+		if(strcmp(word,".enrty") == 0)
+		{
+			printf("\nWARNING (line %d): .entry command apears after label definition", line_number);
+			return 1;
+		}
 			
 		/*in any other case it is a code label line*/
 		if(insert_symbol(symbol,label,IC,CODE_SYMBOLKIND))
@@ -352,7 +357,7 @@ int analyze_label_type(symbol_struct *symbol, char * line, char * label, int lin
 }
 
 
-int analyze_data(char * line, char * word, int line_number,int label_flag,symbol_struct *symbol)
+int analyze_data(data_struct * data ,char * line, char * word, int line_number,int label_flag,symbol_struct * symbol, int * DC)
 {
 	int i =0;
 	
@@ -387,6 +392,7 @@ int analyze_data(char * line, char * word, int line_number,int label_flag,symbol
 			{
 				if(insert_symbol(symbol,word,0,EXERNAL_SYMBOLKIND))
 					return 1;
+				
 				else
 				{
 				   printf("\nERROR (line %d): symbol already exists as local symbol",line_number);
@@ -403,9 +409,28 @@ int analyze_data(char * line, char * word, int line_number,int label_flag,symbol
 		return 0;
 	}
 	
-	
-	return 1;
-}
+	if(strcmp(word,".string") == 0)
+	{
+		if(analyze_string_cmd(data,line,label_flag,line_number,DC))
+			return 1;
+		else
+		{
+			return 0;
+		}
+	}
+		
+		if(strcmp(word,".data") == 0)
+		{
+			if(analyze_data_cmd(data,line,label_flag,line_number,DC))
+				return 1;
+			else
+				return 0;
+		}
+		
+		printf("\nERROR (line %d): unknown command", line_number);
+		return 0;
+		
+	}
 
 
 int analyze_cmd(command_struct * command, char * line, char * word, int line_number,int label_flag, int * IC)
@@ -420,6 +445,7 @@ CommandInfo* commandInfo;
 		}
 			
 			i++; /*to get ot char agter ':'*/
+	}
 		commandInfo = is_cmd(word);
 		if(commandInfo == NULL )
 			{
@@ -430,11 +456,8 @@ CommandInfo* commandInfo;
 		/*TODO take care of the IC counter*/
 
 		insert_command(command,line,commandInfo,2,&IC,line_number);
-
-
-/*printf("==========\n%s\n%s\n%d\n%d\n=======",line,word,line_number,label_flag);*/
-		
-	}
+	
+	
 
 return 1;
 }
@@ -596,6 +619,213 @@ int symbol_is_legal(char* name)
 			return 0;
 	}
 	return 1;
+}
+
+
+int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_number, int * DC)
+{
+	int count = 0;
+	int i = 0, j = 0;
+	char str[MAX_WORD];
+	char label[SYMBOL_MAX_LEN];
+	
+	if(label_flag)
+	{
+		get_word(line,i,label); /*storing symbol in 'label'*/
+		label[strlen(label)-1] = '\0'; /*getting rid of ':'*/
+		
+		while(line[i] != ':') /*skipping label*/
+		{
+			i++;
+		}
+		i++; /*char after label*/
+	}
+		
+	/*skipping to index after word ".string"*/
+	while(line[i] != 'g')
+	{
+		i++;
+	}
+	i++;
+		
+	while (spaceOrTab(line[i]))
+	{
+		i++;
+	}
+		
+	if(line[i] == '\0')
+	{
+		printf("\nERROR (line %d): missing string in line", line_number);
+		return 0;
+	}
+		
+	if (line[i] != '"')
+	{
+		printf("\nERROR (line %d): missing quoation mark 1 in string", line_number);
+		return 0;
+	}
+	
+	i++;
+	
+	while ((line[i] != '\0') && (line[i] != '"'))
+	{
+		str[j++] = line[i++];
+		count++;
+	}
+	str[j] = '\0';
+	count++;
+		
+	if (line[i] != '"')
+	{
+		printf("\nERROR (line %d): missing quoation mark 2 in string", line_number);
+		return 0;
+	}
+	
+	i++;
+	while ((line[i] != '\0') && spaceOrTab(line[i]))
+		i++;
+	if (line[i] != '\0')
+	{
+		printf("\nERROR (line %d): extra character after string", line_number);
+		return 0;
+	}
+	
+	if(insert_data(data,line,str,NULL,count,*DC,STRING_DATAKIND))
+	{
+		*DC += strlen(str)+1;
+		return 1;
+	}
+	else
+	{
+		printf("\nERROR (line %d): failed to allocate data", line_number);
+		return 0;
+	}
+}
+
+int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_number, int * DC)
+{
+	int count = 0;
+	int i = 0;
+	int values[MAX_WORD];
+	char label[SYMBOL_MAX_LEN];
+	label[0] = '\0';
+	                             
+	if(label_flag)
+	{
+		get_word(line,i,label); /*storing symbol in 'label'*/
+		label[strlen(label)-1] = '\0'; /*getting rid of ':'*/
+		
+		while(line[i] != ':') /*skipping label*/
+		{
+			i++;
+		}
+		i++; /*char after label*/
+	}
+	
+	/*skipping to index after word ".data"*/
+	while(line[i] != '.')
+	{
+		i++;
+	}
+	
+	i += 5;
+	
+	
+	while (spaceOrTab(line[i]))
+	{
+		i++;
+	}
+	
+	if(line[i] == '\n')
+	{
+		printf("\nERROR (line %d): missing data in line", line_number);
+		return 0;
+	}
+	
+	if(fill_numbers(line,i,values,line_number,&count))
+	{
+		
+		if(insert_data(data,line,NULL,values,count,*DC,DATA_DATAKIND))
+		{
+			*DC += count;
+			return 1;
+		}
+		else
+		{
+			printf("\nERROR (line %d): failed to allocate data", line_number);
+			return 0;
+		}
+	}
+	return 0;
+}
+	
+/*this function will recieve the .data line and extract the numbers inti an int array
+will return 1 if successful, 0 if not*/
+int fill_numbers(char * line, int i, int * values, int line_number, int * count)
+{
+	char num_str[MAX_WORD];
+	int j, h = 0;
+	int succeeded, num;
+		
+	/*runs until end of the line*/
+	while(line[i])
+	{
+		j = 0;
+		
+		if(line[i] == ',') /*comma before a number*/
+		{
+			printf("\nERROR (line %d): ilegal use of comma", line_number);
+			return 0;
+		}
+			
+		while (line[i] && spaceOrTab(line[i]))
+			i++;
+			
+		while (line[i] && (line[i] != ',') && !spaceOrTab(line[i])) /*potential number*/
+			num_str[j++] = line[i++];
+		
+		while (line[i] && spaceOrTab(line[i]))
+			i++;
+				
+		if (line[i] && (line[i] == ','))
+		{
+			i++;
+				
+			while (line[i] && spaceOrTab(line[i]))
+				i++;
+				
+			if(!line[i]) 
+			{
+				printf("\nERROR (line %d): ilegal use of comma at the end of the data", line_number); /*needs to be number after comma*/
+				return 0;
+			}
+		}
+			
+				
+		if(line[i] == ',') /*double comma*/
+		{
+			printf("\nERROR (line %d): ilegal use of comma", line_number);
+			return 0;
+		}
+	
+		num_str[j] = '\0';
+			
+		/*convert string to num*/
+		num = get_number_from_string(num_str, &succeeded);
+			
+		if(succeeded) /*if num is indeed a number*/
+		{
+			values[h++] = num;
+			(*count)++;
+			continue;
+		}
+		else
+		{
+			printf("\nERROR (line %d): one of the data parametes is not a number", line_number);
+			return 0;
+		}	
+	}
+		return 1;
 }
 
 

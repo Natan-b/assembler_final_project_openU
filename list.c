@@ -81,6 +81,77 @@ int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	
 }
 
+
+int insert_data(data_struct * data, char * label, char * str, int * values, int values_num, int DC, DataKind kind)
+{
+		data_struct * cur = data;
+		/*creating pointer to new struct*/
+		data_struct * new;
+
+		/*if list is a single node*/
+		if(cur->next == NULL)
+		{
+			
+		 	   /*if first node of list empty*/
+				if((cur->str_value[0]=='\0') && (cur->int_values[0]==0))
+				{
+					if(kind == 1) /*if is string command*/
+					{
+						strcpy(cur->name,label);
+						strcpy(cur->str_value,str);
+						cur->int_values_num = values_num;
+						cur->address = DC;
+						cur->kind = kind;
+						return 1;
+					}
+					else /*kind == 2*/
+					{
+						strcpy(cur->name,label);
+						memcpy(cur->int_values,values,(sizeof(int)*values_num));
+						cur->int_values_num =values_num;
+						cur->address = DC;
+						cur->kind = kind;
+						return 1;
+					}
+				}
+				else
+				; /*do nothing*/
+		}
+		
+	
+		/*making way to the end of the list*/
+		while(cur->next != NULL)
+		{
+			cur = cur->next; /*continue to next node*/
+		}
+	
+		/*creating new node and adding node to the end of list*/
+		new = create_data_struct();
+		
+		if(kind == 1) /*if is string command*/
+				{
+					strcpy(new->name,label);
+					strcpy(new->str_value,str);
+					new->int_values_num = values_num;
+					new->address = DC;
+					new->kind = kind;
+						
+				}
+				else /*kind == 2*/
+				{
+					strcpy(new->name,label);
+					memcpy(new->int_values,values,(sizeof(int)*values_num));
+					new->int_values_num = values_num;
+					new->address = DC;
+					new->kind = kind;
+				}
+		cur->next = new; /*adding node to symbol list*/
+		return 1;
+	
+	
+	return 1;
+}
+
 void insert_command(command_struct * head,char * label,CommandInfo* commandInfo, int arguments_num, int** address,int line_number)
 {
 	command_struct * cur = head;
@@ -162,22 +233,38 @@ void print_command_list(command_struct * head)
 
 }
 
-/*debug printing*/
 void print_data_list(data_struct * head)
 {
+	int i;
 	data_struct * cur = head;
 
-	if(cur->next == NULL)
+	if((cur->str_value[0]=='\0') && (cur->int_values[0]==0))
 	printf("\nData list is empty\n");
 
 	else
 		{
 			while(cur)
 			{
-				printf("\ndata->name: %s\ndata->str_value: %s\ndata->int_values: %d\ndata->int_values_num: %d\ndata->address: %d\n",cur->name,cur->str_value,cur->int_values[0],cur->int_values_num,cur->address);
+				if(cur->kind == 1)
+				{
+					printf("\ndata->name: %s\ndata->str_value: %s\ndata->int_values: -\ndata->int_values_num: %d\ndata->address: %d\n",cur->name,cur->str_value,cur->int_values_num,cur->address);
+				printf("data->kind: %s\n","STRING");
+				}
+				
+				else
+				{
+				printf("\ndata->name: %s\ndata->str_value: -\ndata->int_values: ",cur->name);
+				for(i=0;i<cur->int_values_num;i++)
+				{
+				printf("%d ",cur->int_values[i]);
+				}
+				printf("\ndata->int_values_num: %d\ndata->address: %d\n",cur->int_values_num,cur->address);
+				printf("data->kind: %s\n","DATA");
+				}
 				cur = cur->next;
-			}
-		}
+			
+		    } 
+       }
 }
 
 void free_symbol_list(symbol_struct * head)
@@ -222,6 +309,34 @@ void free_data_list(data_struct * head)
 					free(temp);
 				}
 		}
+}
+
+void update_symbol_list(symbol_struct * symbol, int address)
+{
+	symbol_struct * head = symbol;
+	
+	while(head)
+	{
+		if(head->kind == DATA_SYMBOLKIND)
+		{
+			head->value += address;
+			head->offset = ((head->value)%16);
+			head->base_address = ((head->value) - (head->offset));
+		}
+		head = head->next;
+	}
+}
+
+void update_data_list(data_struct * data, int address)
+{
+	data_struct * head = data;
+	
+	while(head)
+	{
+		head->address += address;
+		head = head->next;
+	}
+	
 }
 
 

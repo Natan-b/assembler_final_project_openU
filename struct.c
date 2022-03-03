@@ -39,6 +39,7 @@ data_struct * create_data_struct()
 	data->int_values[0]=0;
 	data->int_values_num=0;
 	data->address=0;
+	data->kind=0;
 	data->next=NULL;
 	return data;
 

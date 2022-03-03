@@ -70,7 +70,7 @@ typedef struct Data_struct {
 	/*addres of data*/
 	int address;
 	/*kind of data*/
-	SymbolKind kind;
+	DataKind kind;
 	/*pointer to next node*/
 	data_ptr next;
 } data_struct;

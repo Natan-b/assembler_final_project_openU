@@ -63,5 +63,11 @@ typedef enum SymbolKind
 	DATA_ENTRY_SYMBOLKIND
 } SymbolKind;
 
+typedef enum DataKind
+{
+	STRING_DATAKIND = 1,
+	DATA_DATAKIND = 2
+} DataKind;
+
 
 #endif

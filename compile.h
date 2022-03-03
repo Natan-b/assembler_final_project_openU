@@ -8,8 +8,8 @@ int is_comment(command_struct *,char *, char *,int,int * );
 int is_empty_line(char *);
 int is_label(char * word);
 int is_label_def(char * word, int line_number);
-int analyze_label_type(symbol_struct *cs, char * line, char * word, int  line_number, int DC, int * IC);
-int analyze_data(char * line, char * word, int line_number,int label_flag, symbol_struct * symbol);
+int analyze_label_type(symbol_struct *cs, char * line, char * word, int  line_number, int DC, int IC);
+int analyze_data(data_struct * data ,char * line, char * word, int line_number,int label_flag, symbol_struct * symbol, int * DC);
 int analyze_cmd(command_struct *, char * line, char * word, int  line_number, int label_flag, int * IC);
 CommandInfo* is_cmd(char *word);
 int fill_arguments(int line_number, char* line, command_struct* command);
@@ -19,6 +19,10 @@ int fill_register_addressing_mode(argument_struct* argument);
 int fill_direct_addressing_mode(argument_struct* argument);
 int fill_relative_addressing_mode(argument_struct* argument);
 int symbol_is_legal(char* name);
+int analyze_string_cmd(data_struct * data,char * line,int label_flag, int line_number, int * DC);
+int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_number, int * DC);
+int fill_numbers(char * line, int i, int * values, int line_number, int * count);
+int label_check(char * label);
 
 
 
