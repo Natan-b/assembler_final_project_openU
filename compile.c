@@ -144,14 +144,13 @@ fd = fopen(preprocess_file_name,"r");
 	print_symbol_list(symbol);
 	print_command_list(command);
 	print_data_list(data);
-	/*TODO fix free_command list and print*/
-	/*free_symbol_list(symbol);*/
+
 	free_command_list(command);
 	free_data_list(data);
 	
 	printf("\n=======after free func========\n");	
 	print_data_list(data);
-	
+	print_command_list(command);
 	
 
 	

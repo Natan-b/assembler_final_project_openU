@@ -218,7 +218,7 @@ void print_command_list(command_struct * head)
 {
 	command_struct * cur = head;
 
-	if(cur->next == NULL)
+	if(head->arguments_num==0 && head->address == 0 && head->line_number == 0)
 	printf("\nCommand list is empty\n");
 
 	else
@@ -288,11 +288,15 @@ void free_command_list(command_struct * head)
 		{			
 			command_struct *temp;
 			while(head != NULL)
-				{							
+				{	
+					head->arguments_num=0;
+					head->address = 0;
+					head->line_number = 0;					
 					temp = head;
 					head = head->next;
 					temp->next=NULL;
-					free(temp);	
+					free(temp);
+						
 				}
 		}
 }
