@@ -73,7 +73,7 @@ command_struct *command = create_command_struct();
 data_struct *data = create_data_struct();
 
 sprintf(preprocess_file_name,"%s.am",file_name);
-fd = fopen(preprocess_file_name,"r");
+fd = fopen("k1","r");
 
 /*opening processed file*/
 
@@ -147,11 +147,12 @@ fd = fopen(preprocess_file_name,"r");
 
 	free_command_list(command);
 	free_data_list(data);
+	free_symbol_list(symbol);
 	
 	printf("\n=======after free func========\n");	
 	print_data_list(data);
 	print_command_list(command);
-	
+	print_symbol_list(symbol);
 
 	
 	fclose(fd);
@@ -789,16 +790,27 @@ int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 		if (line[i] && (line[i] == ','))
 		{
 			i++;
-				
+			
 			while (line[i] && spaceOrTab(line[i]))
 				i++;
 				
 			if(!line[i]) 
 			{
-				printf("\nERROR (line %d): ilegal use of comma at the end of the data", line_number); /*needs to be number after comma*/
+				printf("\nERROR (line %d): ilegal comma at end of data", line_number); /*needs to be number after comma*/
 				return 0;
 			}
 		}
+		else if(!line[i])
+		{
+			; /*do nothing*/
+		}
+		else 
+		{
+			printf("\nERROR (line %d): missing comma", line_number);
+			return 0;
+		}
+		
+		
 			
 				
 		if(line[i] == ',') /*double comma*/

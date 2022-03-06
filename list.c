@@ -200,10 +200,10 @@ void insert_command(command_struct * head,char * label,CommandInfo* commandInfo,
 void print_symbol_list(symbol_struct * cs)
 {
 
-	if(cs == NULL)
+	if(cs->name[0]== '\0')
 	printf("\nSymbol list is empty\n");
 
-
+	else
 	while(cs)
 	{
 		printf("\n%s\n%d\n%d\n%d\n%d\n",cs->name,cs->value,cs->base_address,cs->offset,cs->kind);
@@ -273,7 +273,8 @@ void free_symbol_list(symbol_struct * head)
 		{			
 			symbol_struct *temp;
 			while(head != NULL)
-				{							
+				{	
+					head->name[0]= '\0';						
 					temp = head;
 					head = head->next;
 					temp->next=NULL;
@@ -306,7 +307,9 @@ void free_data_list(data_struct * head)
 		{			
 			data_struct *temp;
 			while(head != NULL)
-				{							
+				{	
+					head->int_values[0]=0;
+					head->str_value[0]='\0';					
 					temp = head;
 					head = head->next;
 					temp->next=NULL;
