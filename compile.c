@@ -111,7 +111,6 @@ fd = fopen("k1","r");
 			/*checking if line is a comment line*/
 			if(is_comment(line))
 			{
-				printf("\n\nin line %d ok in while: %d",line_number, ok);
 				continue; /*will skip to the next line*/
 			}
 			
@@ -137,15 +136,17 @@ fd = fopen("k1","r");
 				/*printf("\n\n%s\n\n",word);*/
 			}
 			
+			
+			
 			if(word[0] == '.')
 			{
-				ok = ok && analyze_data(data,line,word,line_number,label_flag,symbol,&DC);
+				ok = ok & analyze_data(data,line,word,line_number,label_flag,symbol,&DC);
 			}
 			else
-			ok = ok && analyze_cmd(command,line,word,line_number,label_flag,&IC);
+			ok = ok & analyze_cmd(command,line,word,line_number,label_flag,&IC);
 			
 				
-			printf("\n\nin line %d ok in while: %d",line_number, ok);
+			/*printf("\n\nin line %d ok in while: %d",line_number, ok);*/
 			
 			
 		}		
@@ -361,6 +362,7 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 {
 	int i =0;
 	
+	
 	if(label_flag)
 	{
 		while(line[i] != ':')
@@ -437,6 +439,8 @@ int analyze_cmd(command_struct * command, char * line, char * word, int line_num
 {
 int i =0;
 CommandInfo* commandInfo;	
+
+
 	if(label_flag)
 	{
 		while(line[i] != ':')
@@ -449,7 +453,7 @@ CommandInfo* commandInfo;
 		commandInfo = is_cmd(word);
 		if(commandInfo == NULL )
 			{
-				printf("\n==========the command %s not found==========\n",word);
+				printf("\nERROR (line %d): '%s' is unknown command", line_number, word);
 				return 0;
 			}
 		/*TODO send the right argument of the argument number */
@@ -661,7 +665,7 @@ int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_
 		
 	if (line[i] != '"')
 	{
-		printf("\nERROR (line %d): missing quoation mark 1 in string", line_number);
+		printf("\nERROR (line %d): missing quoation mark in string", line_number);
 		return 0;
 	}
 	
@@ -677,7 +681,7 @@ int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_
 		
 	if (line[i] != '"')
 	{
-		printf("\nERROR (line %d): missing quoation mark 2 in string", line_number);
+		printf("\nERROR (line %d): missing quoation mark in string", line_number);
 		return 0;
 	}
 	
