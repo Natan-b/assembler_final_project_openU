@@ -74,7 +74,7 @@ command_struct *command = create_command_struct();
 data_struct *data = create_data_struct();
 
 sprintf(preprocess_file_name,"%s.am",file_name);
-fd = fopen("k1","r");
+fd = fopen(preprocess_file_name,"r");
 
 /*opening processed file*/
 
