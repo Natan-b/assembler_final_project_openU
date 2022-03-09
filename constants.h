@@ -3,7 +3,7 @@
 
 #define MAX_NAME_FILE 20
 /* max line length */
-#define MAX_ONE_LINE 80
+#define MAX_ONE_LINE 1000
 #define MAX_WORD 40
 #define SYMBOL_MAX_LEN 31
 /* max argument length */
@@ -14,6 +14,7 @@
 #define ADDRESSING_MODES_NUM 4
 /* max number of integers in .data */
 #define MAX_INTS_IN_DATA 40
+
 
 
 

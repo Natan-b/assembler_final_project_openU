@@ -45,8 +45,6 @@ int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 			else
 				return 0;
 				
-			
-			return 0;	
 		}
 	}
 	
@@ -64,8 +62,6 @@ int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 			else
 				return 0;
 				
-		
-		return 0;
 	}
 	
 	/*creating new node and adding node to the end of list*/

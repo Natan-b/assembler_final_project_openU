@@ -12,7 +12,7 @@
 
 
 
-int ok = 1;
+
 
 /* a "table" of the info of each optional command */
 CommandInfo commandInfos[] =
@@ -65,6 +65,7 @@ int label_flag;
 int line_number = 0; /*count line from file to print if line have error*/
 int IC = 100;
 int DC = 0;
+int ok = 1;
 FILE * fd;
 
 /*creatinf symbol,command and data lists*/
@@ -83,14 +84,22 @@ fd = fopen("k1","r");
 		return;
 	}
 	printf("start file: %s\n",file_name);
-	while(!feof(fd))
+	while(1)
 		{
 			i=0;
 			label_flag = 0;		
 			/* get new line from the file */
 			fgets(full_line,MAX_ONE_LINE,fd);
+			if(feof(fd))
+				break;
 			line_number++;
-			/* remove extra whitespaces and tabs from beginnig of string */
+			if(strlen(full_line) > 81)
+			{
+				printf("\nERROR (line %d): ilegal length of line\n", line_number);
+				ok = 0;
+				continue;
+			}
+			/*remove extra whitespaces and tabs from beginnig of string */
 			clean_line(full_line,line);
 			
 			/*checking if line is an empty line*/
@@ -100,11 +109,14 @@ fd = fopen("k1","r");
 			get_word(line,i,word); /*recieving word*/
 
 			/*checking if line is a comment line*/
-			if(is_comment(command,line, word,line_number,&IC))
-			continue; /*will skip to the next line*/
+			if(is_comment(line))
+			{
+				printf("\n\nin line %d ok in while: %d",line_number, ok);
+				continue; /*will skip to the next line*/
+			}
 			
 			/*checking if first word is a label definition or external label definition*/
-			if(is_label_def(word,line_number))
+			if(is_label_def(word,line_number, &ok))
 			{
 				if(analyze_label_type(symbol,line,word, line_number,DC,IC))
 					label_flag = 1;
@@ -133,7 +145,7 @@ fd = fopen("k1","r");
 			ok = ok && analyze_cmd(command,line,word,line_number,label_flag,&IC);
 			
 				
-			
+			printf("\n\nin line %d ok in while: %d",line_number, ok);
 			
 			
 		}		
@@ -181,25 +193,13 @@ void get_word(char * from,int i,char * to)
 
 
 /*function will check if line is a comment line*/
-int is_comment(command_struct * command,char * line, char * word, int line_number, int * IC)
+int is_comment(char * line)
 {
-	CommandInfo* commandInfo;
 	if(line[0] == ';')
 	
 		return 1;
-	else {
-		/*commandInfo = is_cmd(word);
-		if(commandInfo == NULL )
-			{
-				printf("\n==========the command %s not found==========\n",word);
-				return 0;
-			} */
-		/*TODO send the right argument of the argument number */
-		/*TODO take care of the IC counter*/
-
-		/*insert_command(command,line,commandInfo,2,&IC,line_number);*/
+	else 
 		return 0;
-	}
 		
 }
 
@@ -213,7 +213,7 @@ int is_empty_line(char * line)
 		return 0;
 }
 
-int is_label_def(char * word, int line_number)
+int is_label_def(char * word, int line_number, int * ok)
 {
 	int i = 0;
 	if((word[i] >= 'a' && word[i] <= 'z') || (word[i] >= 'A' && word[i] <= 'Z'))
@@ -233,7 +233,7 @@ int is_label_def(char * word, int line_number)
 			else
 			{
 				printf("\nERROR (line %d): symbol definitiom is too long", line_number);
-				ok = 0;
+				*ok = 0;
 				return 0;
 			}
 		}	
