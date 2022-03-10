@@ -152,8 +152,8 @@ fd = fopen(preprocess_file_name,"r");
 		}		
 /*-------------------------------------------------------------------------*/
 				
-	update_symbol_list(symbol,IC+1);
-	update_data_list(data,IC+1);		
+	update_symbol_list(symbol,IC);
+	update_data_list(data,IC);		
 	print_symbol_list(symbol);
 	print_command_list(command);
 	print_data_list(data);
@@ -471,8 +471,70 @@ if(!(fill_arguments(line_number, (line + i), temp)))
 
 
 insert_command(command,line,commandInfo,temp->arguments_num,&IC,line_number,temp->arguments);
-
+(*IC) += get_command_size(temp);
 return 1;
+}
+
+/*get the size that the command take(lines)*/
+int get_command_size(command_struct* cur)
+{
+	int size = 0;
+	int i;
+	if (cur->arguments_num == 0)
+	{
+		return 1;
+	}
+	if (cur->arguments_num == 1)
+	{	
+		size+=2;
+		switch(cur->arguments[0].addressingMode)
+			{
+				case IMMEDIETE:
+					size += 1;
+					break;
+	
+				case DIRECT:
+					size += 2;		
+					break;
+
+				case INDEX:
+					size += 2;
+					break;
+	
+				case REGISTER:
+					break;
+				
+
+			}
+		return size;
+	}
+	if (cur->arguments_num == 2)
+	{
+		size+=2;
+		for(i=0; i < cur->arguments_num; i++)
+			{
+				switch(cur->arguments[i].addressingMode)
+					{
+						case IMMEDIETE:
+							size += 1;
+							break;
+	
+						case DIRECT:
+							size += 2;
+							break;
+
+						case INDEX:
+							size += 2;
+							break;
+	
+						case REGISTER:
+							break;
+					}
+
+			}
+		return size;
+	}
+	return 1;
 }
 
 CommandInfo* is_cmd(char *word)

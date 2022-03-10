@@ -23,7 +23,7 @@ int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_nu
 int fill_numbers(char * line, int i, int * values, int line_number, int * count);
 int label_check(char * label);
 int symbol_and_register_is_ligal(char* word);
-
+int get_command_size(command_struct* command);
 
 
 

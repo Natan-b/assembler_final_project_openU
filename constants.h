@@ -45,7 +45,7 @@ typedef enum AddressingMode
 {
 	IMMEDIETE,
 	DIRECT,
-	INDEX, /*RELATIVE*/
+	INDEX, 
 	REGISTER
 } AddressingMode;
 
