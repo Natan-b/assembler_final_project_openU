@@ -18,7 +18,6 @@ int fill_immediete_addressing_mode(argument_struct* argument);
 int fill_register_addressing_mode(argument_struct* argument);
 int fill_direct_addressing_mode(argument_struct* argument);
 int fill_index_addressing_mode(argument_struct* argument);
-int symbol_is_legal(char* name);
 int analyze_string_cmd(data_struct * data,char * line,int label_flag, int line_number, int * DC);
 int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_number, int * DC);
 int fill_numbers(char * line, int i, int * values, int line_number, int * count);

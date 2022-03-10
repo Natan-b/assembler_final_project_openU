@@ -150,19 +150,28 @@ int insert_data(data_struct * data, char * label, char * str, int * values, int 
 	return 1;
 }
 
-void insert_command(command_struct * head,char * label,CommandInfo* commandInfo, int arguments_num, int** address,int line_number)
+void insert_command(command_struct * head,char * label,CommandInfo* commandInfo, int arguments_num, int** address,int line_number,struct argument_struct * arguments)
 {
 	command_struct * cur = head;
-	
+	int i;
 
-	if(cur->next == NULL)
-		{ 				
-			/*insert data to new node */
-			strcpy(cur->label,label);
-			cur->commandInfo=commandInfo;
-			cur->arguments_num=arguments_num;
-			cur->address=(**address);
-			cur->line_number=line_number;
+	if(cur->next == NULL )
+		{ 		
+					/*insert data to new node */
+					strcpy(cur->label,label);
+					cur->commandInfo=commandInfo;
+					cur->arguments_num=arguments_num;
+					cur->address=(**address);
+					cur->line_number=line_number;
+		
+					for(i=0; i < cur->arguments_num; i++)
+						{
+							strcpy(cur->arguments[i].argument_str , arguments[i].argument_str); 
+							cur->arguments[i].addressingMode = arguments[i].addressingMode;
+						}
+
+					
+		  
 			/*creat new node for command list */
 			cur->next = create_command_struct();
 			if (cur->next == NULL)
@@ -184,7 +193,12 @@ void insert_command(command_struct * head,char * label,CommandInfo* commandInfo,
 		cur->arguments_num=arguments_num;
 		cur->address=(**address);
 		cur->line_number=line_number;
-
+			for(i=0; i < cur->arguments_num; i++)
+				{
+					strcpy(cur->arguments[i].argument_str , arguments[i].argument_str); 
+					cur->arguments[i].addressingMode = arguments[i].addressingMode;
+				}
+				  
 
 		/* add the new node to the end of the list*/
 		cur->next = create_command_struct();
@@ -215,9 +229,10 @@ void print_symbol_list(symbol_struct * cs)
 /*debug printing*/
 void print_command_list(command_struct * head)
 {
+	int i;
 	command_struct * cur = head;
 
-	if(head->arguments_num==0 && head->address == 0 && head->line_number == 0)
+	if( head->address == 0 && head->line_number == 0)
 	printf("\nCommand list is empty\n");
 
 	else
@@ -225,6 +240,9 @@ void print_command_list(command_struct * head)
 			while(cur->next)
 			{
 				printf("\ncommand->label: %s\ncommand->name: %s\ncommand->arguments_num: %d\ncommand->address: %d\ncommand->line_number: %d\n",cur->label,cur->commandInfo->commandName,cur->arguments_num,cur->address,cur->line_number);
+				for(i=0; i < cur->arguments_num; i++)
+					 	printf("\n argument_str->> %s\n addressingMode->> %d\n", cur->arguments[i].argument_str ,cur->arguments[i].addressingMode);
+					
 				cur = cur->next;
 			}
 		}

@@ -438,7 +438,8 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 int analyze_cmd(command_struct * command, char * line, char * word, int line_number,int label_flag, int * IC)
 {
 int i =0;
-CommandInfo* commandInfo;	
+CommandInfo* commandInfo;
+command_struct* temp = command;
 
 commandInfo = is_cmd(word);
 if(commandInfo == NULL )
@@ -460,13 +461,16 @@ if(label_flag)
 while(spaceOrTab(line[i])) i++;
 
 i = i + strlen(word);
+
+while(temp->next!=NULL)
+	temp=temp->next;
 		
-if(!(fill_arguments(line_number, (line + i), command)))
+if(!(fill_arguments(line_number, (line + i), temp)))
 	return 0;
 
-insert_command(command,line,commandInfo,2,&IC,line_number);
-	
-	
+
+
+insert_command(command,line,commandInfo,temp->arguments_num,&IC,line_number,temp->arguments);
 
 return 1;
 }
@@ -522,6 +526,8 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 			printf("Empty argument. in line %d",line_number);
 			return 0;
 		}
+		
+
 		if (!fill_addressing_mode(&command->arguments[j]))
 		{
 			printf("Bad addressing mode for argument. in line %d",line_number);
@@ -576,6 +582,7 @@ int fill_immediete_addressing_mode(argument_struct* argument)
 	return succeded;
 }
 
+/*TODO check that we dont creat more words here */
 int fill_register_addressing_mode(argument_struct* argument)
 {
 	int num, succeded;
@@ -598,7 +605,7 @@ int fill_register_addressing_mode(argument_struct* argument)
 
 int fill_direct_addressing_mode(argument_struct* argument)
 {
-	if (!symbol_is_legal(argument->argument_str))
+	if (!is_label(argument->argument_str))
 		return 0;
 	argument->addressingMode = DIRECT;
 	return 1;
@@ -607,9 +614,7 @@ int fill_direct_addressing_mode(argument_struct* argument)
 int fill_index_addressing_mode(argument_struct* argument)
 {
 	
-	
-
-	if (strlen(argument->argument_str) < 2)
+	if (strlen(argument->argument_str) < 6)
 		return 0;
 		
 	if( !(symbol_and_register_is_ligal(argument->argument_str)))
@@ -620,20 +625,6 @@ int fill_index_addressing_mode(argument_struct* argument)
 }
 
 
-int symbol_is_legal(char* name)
-{
-	int symbol_length = strlen(name), i;
-	if (symbol_length == 0)
-		return 0;
-	if (!is_letter(name[0]))
-		return 0;
-	for (i = 1; i < symbol_length; i++)
-	{
-		if (!is_letter(name[i]) && !is_number(name[i]))
-			return 0;
-	}
-	return 1;
-}
 
 int symbol_and_register_is_ligal(char* word)
 {
@@ -648,7 +639,7 @@ int symbol_and_register_is_ligal(char* word)
 	
 	symbol_str[j]='\0';
 
-	if(!(symbol_is_legal(symbol_str)))
+	if(!(is_label(symbol_str)))
 		return 0;
 	j=0;
 	
@@ -668,7 +659,7 @@ int symbol_and_register_is_ligal(char* word)
 		return 0;	
 	num = atoi(register_str);
 
-	if ((num < 0) || (num > 15))
+	if ((num < 10) || (num > 15))
 		return 0;
 	
 	return 1;
