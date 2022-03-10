@@ -18,38 +18,38 @@
 CommandInfo commandInfos[] =
 {
 	{MOV, "mov", 0, 0, 2,
-		{{3, {IMMEDIETE, DIRECT, REGISTER}, SOURCE},
-		{2, {DIRECT, REGISTER}, TARGET}}},
+		{{4, {IMMEDIETE, DIRECT, INDEX, REGISTER}, SOURCE},
+		{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{CMP, "cmp", 1, 0, 2,
-		{{3, {IMMEDIETE, DIRECT, REGISTER}, SOURCE},
-		{3, {IMMEDIETE, DIRECT, REGISTER}, TARGET}}},
+		{{4, {IMMEDIETE, DIRECT, INDEX, REGISTER}, SOURCE},
+		{4, {IMMEDIETE, DIRECT, INDEX, REGISTER}, TARGET}}},
 	{ADD, "add", 2, 10, 2,
-		{{3, {IMMEDIETE, DIRECT, REGISTER}, SOURCE},
-		{2, {DIRECT, REGISTER}, TARGET}}},
+		{{4, {IMMEDIETE, DIRECT, INDEX, REGISTER}, SOURCE},
+		{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{SUB, "sub", 2, 11, 2,
-		{{3, {IMMEDIETE, DIRECT, REGISTER}, SOURCE},
-		{2, {DIRECT, REGISTER}, TARGET}}},
+		{{4, {IMMEDIETE, DIRECT, INDEX, REGISTER}, SOURCE},
+		{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{LEA, "lea", 4, 0, 2,
-		{{1, {DIRECT}, SOURCE},
-		{2, {DIRECT, REGISTER}, TARGET}}},
+		{{2, {DIRECT, INDEX}, SOURCE},
+		{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{CLR, "clr", 5, 10, 1,
-		{{2, {DIRECT, REGISTER}, TARGET}}},
+		{{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{NOT, "not", 5, 11, 1,
-		{{2, {DIRECT, REGISTER}, TARGET}}},
+		{{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{INC, "inc", 5, 12, 1,
-		{{2, {DIRECT, REGISTER}, TARGET}}},
+		{{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{DEC, "dec", 5, 13, 1,
-		{{2, {DIRECT, REGISTER}, TARGET}}},
+		{{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{JMP, "jmp", 9, 10, 1,
-		{{2, {DIRECT, RELATIVE}, TARGET}}},
+		{{2, {DIRECT, INDEX}, TARGET}}},
 	{BNE, "bne", 9, 11, 1,
-		{{2, {DIRECT, RELATIVE}, TARGET}}},
+		{{2, {DIRECT, INDEX}, TARGET}}},
 	{JSR, "jsr", 9, 12, 1,
-		{{2, {DIRECT, RELATIVE}, TARGET}}},
+		{{2, {DIRECT, INDEX}, TARGET}}},
 	{RED, "red", 12, 0, 1,
-		{{2, {DIRECT, REGISTER}, TARGET}}},
+		{{3, {DIRECT, INDEX, REGISTER}, TARGET}}},
 	{PRN, "prn", 13, 0, 1,
-		{{3, {IMMEDIETE, DIRECT, REGISTER}, TARGET}}},
+		{{4, {IMMEDIETE, DIRECT, INDEX, REGISTER}, TARGET}}},
 	{RTS, "rts", 14, 0, 0},
 	{STOP, "stop", 15, 0, 0}
 };
@@ -440,8 +440,14 @@ int analyze_cmd(command_struct * command, char * line, char * word, int line_num
 int i =0;
 CommandInfo* commandInfo;	
 
+commandInfo = is_cmd(word);
+if(commandInfo == NULL )
+	{
+		printf("\nERROR (line %d): '%s' is unknown command", line_number, word);
+		return 0;
+	}
 
-	if(label_flag)
+if(label_flag)
 	{
 		while(line[i] != ':')
 		{
@@ -450,16 +456,15 @@ CommandInfo* commandInfo;
 			
 			i++; /*to get ot char agter ':'*/
 	}
-		commandInfo = is_cmd(word);
-		if(commandInfo == NULL )
-			{
-				printf("\nERROR (line %d): '%s' is unknown command", line_number, word);
-				return 0;
-			}
-		/*TODO send the right argument of the argument number */
-		/*TODO take care of the IC counter*/
 
-		insert_command(command,line,commandInfo,2,&IC,line_number);
+while(spaceOrTab(line[i])) i++;
+
+i = i + strlen(word);
+		
+if(!(fill_arguments(line_number, (line + i), command)))
+	return 0;
+
+insert_command(command,line,commandInfo,2,&IC,line_number);
 	
 	
 
@@ -482,6 +487,8 @@ return NULL;
 int fill_arguments(int line_number, char* line, command_struct* command)
 {
 	int i = 0, j = 0, k;
+
+
 	while (line[i])
 	{
 		while ((line[i] != '\0') && spaceOrTab(line[i]))
@@ -545,7 +552,7 @@ int fill_addressing_mode(argument_struct* argument)
 	{
 		return 1;
 	}
-	if (fill_relative_addressing_mode(argument))
+	if (fill_index_addressing_mode(argument))
 	{
 		return 1;
 	}
@@ -572,20 +579,22 @@ int fill_immediete_addressing_mode(argument_struct* argument)
 int fill_register_addressing_mode(argument_struct* argument)
 {
 	int num, succeded;
-	if (strlen(argument->argument_str) != 2)
+	if ((strlen(argument->argument_str) != 2) && (strlen(argument->argument_str) != 3))
 		return 0;
 	if (argument->argument_str[0] != 'r')
 		return 0;
 	num = get_number_from_string(&argument->argument_str[1], &succeded);
 	if (!succeded)
 		return 0;
-	if ((num < 0) || (num > 7))
+	if ((num < 0) || (num > 15))
 		return 0;
 	/*clean and leave just the number of the argument*/
 	move_left(argument->argument_str, 1);
 	argument->addressingMode = REGISTER;
 	return 1;
 }
+
+
 
 int fill_direct_addressing_mode(argument_struct* argument)
 {
@@ -595,17 +604,18 @@ int fill_direct_addressing_mode(argument_struct* argument)
 	return 1;
 }
 
-int fill_relative_addressing_mode(argument_struct* argument)
+int fill_index_addressing_mode(argument_struct* argument)
 {
+	
+	
+
 	if (strlen(argument->argument_str) < 2)
 		return 0;
-	if (argument->argument_str[0] != '%')
+		
+	if( !(symbol_and_register_is_ligal(argument->argument_str)))
 		return 0;
-	if (!symbol_is_legal(&argument->argument_str[1]))
-		return 0;
-	/* remove the %*/
-	move_left(argument->argument_str, 1);
-	argument->addressingMode = RELATIVE;
+	
+	argument->addressingMode = INDEX;
 	return 1;
 }
 
@@ -625,6 +635,44 @@ int symbol_is_legal(char* name)
 	return 1;
 }
 
+int symbol_and_register_is_ligal(char* word)
+{
+	int i=0;
+	int j=0;
+	int num;
+	char symbol_str[SYMBOL_MAX_LEN];
+	char register_str[MAX_REGISTER_LEN];
+
+	while(word[i] != '\0' && word[i] != '[')
+		symbol_str[j++]=word[i++];
+	
+	symbol_str[j]='\0';
+
+	if(!(symbol_is_legal(symbol_str)))
+		return 0;
+	j=0;
+	
+	if(word[i] != '[')
+		return 0;
+	i++;
+
+	if(word[i] != 'r')
+		return 0; 
+	i++;
+
+	while( word[i] != ']' && word[i] != '\0')
+		register_str[j++] = word[i++];
+	register_str[j]='\0';
+
+	if(word[i]!=']')
+		return 0;	
+	num = atoi(register_str);
+
+	if ((num < 0) || (num > 15))
+		return 0;
+	
+	return 1;
+}
 
 int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_number, int * DC)
 {

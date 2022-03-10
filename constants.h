@@ -6,6 +6,7 @@
 #define MAX_ONE_LINE 1000
 #define MAX_WORD 40
 #define SYMBOL_MAX_LEN 31
+#define MAX_REGISTER_LEN 6
 /* max argument length */
 #define MAX_ARGUMENT_LEN 100
 /* max number of arguments */
@@ -44,7 +45,7 @@ typedef enum AddressingMode
 {
 	IMMEDIETE,
 	DIRECT,
-	RELATIVE,
+	INDEX, /*RELATIVE*/
 	REGISTER
 } AddressingMode;
 
