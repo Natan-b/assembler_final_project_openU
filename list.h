@@ -13,4 +13,5 @@ void free_command_list(command_struct *);
 void free_data_list(data_struct *);
 void update_symbol_list(symbol_struct * symbol, int address);
 void update_data_list(data_struct * data, int address);
+int get_data_size(data_struct * data);
 #endif

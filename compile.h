@@ -1,6 +1,8 @@
 #ifndef COMPILE_H
 #define COMPILE_H
 
+#include <stdio.h>
+
 /*starts checking file after being processed*/
 void compile_file(char * file_name);
 void get_word(char *,int i, char *);
@@ -24,7 +26,8 @@ int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 int label_check(char * label);
 int symbol_and_register_is_ligal(char* word);
 int get_command_size(command_struct* command);
-
-
+void write_ob_file(FILE* ob_file, command_struct * command,data_struct * data, symbol_struct * symbol);
+void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_struct* symbol);
+void write_word(FILE* file, int address, unsigned int word);
 
 #endif

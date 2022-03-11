@@ -363,5 +363,17 @@ void update_data_list(data_struct * data, int address)
 	
 }
 
+int get_data_size(data_struct * data)
+{
+data_struct * head = data;
+int size = 0;
+
+while(head)
+{
+size += head->int_values_num;
+head = head->next;
+}
+return size;
+}
 
 

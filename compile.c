@@ -1,3 +1,4 @@
+
 #include "preprocessor.h"
 #include "general_functions.h"
 #include "hash.h"
@@ -60,13 +61,17 @@ char full_line[MAX_ONE_LINE];
 char line[MAX_ONE_LINE];
 char word[MAX_WORD];
 char preprocess_file_name[MAX_NAME_FILE];
+char ob_file_name[MAX_NAME_FILE];
+char ext_file_name[MAX_NAME_FILE];
+char ent_file_name[MAX_NAME_FILE];
 int i;
 int label_flag;
 int line_number = 0; /*count line from file to print if line have error*/
 int IC = 100;
 int DC = 0;
 int ok = 1;
-FILE * fd;
+FILE * fd,* ob_file, *ext_file, *ent_file;
+
 
 /*creatinf symbol,command and data lists*/
 symbol_struct *symbol = create_symbol_struct();
@@ -99,13 +104,14 @@ fd = fopen(preprocess_file_name,"r");
 				ok = 0;
 				continue;
 			}
+			
 			/*remove extra whitespaces and tabs from beginnig of string */
 			clean_line(full_line,line);
-			
+
 			/*checking if line is an empty line*/
-			if(is_empty_line(line))
-			continue; /*will skip to the next line*/
-			
+			if( strlen(line) == 0 )
+				continue; /*will skip to the next line*/
+		
 			get_word(line,i,word); /*recieving word*/
 
 			/*checking if line is a comment line*/
@@ -151,12 +157,30 @@ fd = fopen(preprocess_file_name,"r");
 			
 		}		
 /*-------------------------------------------------------------------------*/
-				
+	/* TODO seccend test */
+	fclose(fd);
+		
 	update_symbol_list(symbol,IC);
 	update_data_list(data,IC);		
-	print_symbol_list(symbol);
+	/*print_symbol_list(symbol);
 	print_command_list(command);
-	print_data_list(data);
+	print_data_list(data);*/
+
+	if(ok)
+		{
+			/* write the ob file */
+			sprintf(ob_file_name, "%s.ob", file_name);
+			ob_file = fopen(ob_file_name, "w");
+			if (ob_file != NULL)
+				{
+					write_ob_file(ob_file, command, data, symbol);
+					fclose(ob_file);
+				}
+			else
+				{
+					printf("OB file %s cannot be created\n", ob_file_name);
+				}
+		}
 
 	free_command_list(command);
 	free_data_list(data);
@@ -168,7 +192,7 @@ fd = fopen(preprocess_file_name,"r");
 	print_symbol_list(symbol);
 
 	
-	fclose(fd);
+	
 	printf("\n\nok is: %d\n",ok);
 	printf("\nnumber of line is file is %d\nfinish file: %s\n",line_number,file_name); /*debug print*/
 	
@@ -944,11 +968,75 @@ int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 		return 1;
 }
 
+/*create the ob file and call the print to file methode*/
+void write_ob_file(FILE* ob_file, command_struct * command,data_struct * data, symbol_struct * symbol)
+{
+	command_struct * cur_command = command;
+
+	int command_size=0, data_size = 0;
+	while(cur_command->next != NULL)
+		{
+			command_size += get_command_size(cur_command);
+			cur_command = cur_command->next;
+		}
+
+	data_size = get_data_size(data);
+
+	fprintf(ob_file, "%d %d\n", command_size, data_size);
+
+	cur_command = command;
+
+	if( cur_command->address != 0 )
+		{
+			while( cur_command->next != NULL && cur_command->address != 0)
+				{
+					write_command_to_ob_file(ob_file, command, symbol);
+					cur_command = cur_command->next;
+				}
+		}
+
+}
 
 
+/*arrange the command and argument as wish and call the print method*/
+void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_struct* symbol)
+{
+	int num, succeded, address = command->address, i;
+	unsigned int word = 0, temp=0;
+	symbol_struct* cur_symbol = symbol;
+	/*arrange the bits of the command
+	are - if its A - absolut, E - External, R - Relocatable*/
+	word = word | 0x40000 ;
+	word |= 1 << command->commandInfo->oppCode ;
+	write_word(ob_file, address, word);
+
+	if(command->commandInfo->argumentInfosNum != 0)
+		{
+			word = word & 0x40000 ;
+			if( command->commandInfo->funct != 0 )
+				word |= command->commandInfo->funct << 12;
+			if( command->arguments_num ==2 );
+				/*TODO continue here */ 
+				
+		}
+
+	
+
+	
+}
 
 
-
-
+/* write a word to the ob file */
+void write_word(FILE* file, int address, unsigned int word)
+{
+	unsigned int A, B ,C, D, E;
+	A = word & 0xf0000;
+	B = word & 0xf000;
+	C = word & 0xf00;
+	D = word & 0xf0;
+	E = word & 0xf;
+	/* the "& 0xfff" for get only 3 bytes */
+	fprintf(file, "%04d A%X-B%X-C%X-D%X-E%X \n", address, A>>16 , B>>12, C>>8, D>>4, E);
+}
 
 
