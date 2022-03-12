@@ -29,5 +29,6 @@ int get_command_size(command_struct* command);
 void write_ob_file(FILE* ob_file, command_struct * command,data_struct * data, symbol_struct * symbol);
 void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_struct* symbol);
 void write_word(FILE* file, int address, unsigned int word);
+symbol_struct* find_symbol(char* name, symbol_struct * symbol);
 
 #endif

@@ -376,4 +376,32 @@ head = head->next;
 return size;
 }
 
-
+int update_symbol_entry(symbol_struct * symbol,char * word, int line_number)
+{
+	symbol_struct * cur = symbol;
+	
+	while(cur)
+	{
+		if(strcmp(cur->name,word) == 0)
+		{
+			
+			if(cur->kind == CODE_SYMBOLKIND)
+			{
+				cur->kind = CODE_ENTRY_SYMBOLKIND;
+				return 1;
+			}
+			
+			if(cur->kind == DATA_SYMBOLKIND)
+			{
+				cur->kind = DATA_ENTRY_SYMBOLKIND;
+				return 1;
+			}
+			
+			printf("\nERROR (line %d): symbol cannot be an entry and an external kind",line_number);
+			return 0;
+		}
+		cur = cur->next;
+	}
+		printf("\nERROR (line %d): symbol not found in existing symbol list",line_number);
+		return 0;
+}

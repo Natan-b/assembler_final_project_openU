@@ -62,15 +62,15 @@ char line[MAX_ONE_LINE];
 char word[MAX_WORD];
 char preprocess_file_name[MAX_NAME_FILE];
 char ob_file_name[MAX_NAME_FILE];
-char ext_file_name[MAX_NAME_FILE];
-char ent_file_name[MAX_NAME_FILE];
+/*char ext_file_name[MAX_NAME_FILE];
+char ent_file_name[MAX_NAME_FILE];*/
 int i;
 int label_flag;
 int line_number = 0; /*count line from file to print if line have error*/
 int IC = 100;
 int DC = 0;
 int ok = 1;
-FILE * fd,* ob_file, *ext_file, *ent_file;
+FILE * fd,* ob_file/*, *ext_file, *ent_file*/;
 
 
 /*creatinf symbol,command and data lists*/
@@ -155,13 +155,89 @@ fd = fopen(preprocess_file_name,"r");
 			/*printf("\n\nin line %d ok in while: %d",line_number, ok);*/
 			
 			
-		}		
-/*-------------------------------------------------------------------------*/
-	/* TODO seccend test */
-	fclose(fd);
-		
+		}
+	
 	update_symbol_list(symbol,IC);
-	update_data_list(data,IC);		
+	update_data_list(data,IC);
+		
+rewind(fd);
+	/* now performing second check */
+	if(ok)
+	{
+	
+	while(1)
+		{
+			
+			i=0;
+			line_number = 0;
+			label_flag = 0;		
+			/* get new line from the file */
+			fgets(full_line,MAX_ONE_LINE,fd);
+			if(feof(fd))
+				break;
+			line_number++;
+			
+			/*remove extra whitespaces and tabs from beginnig of string */
+			clean_line(full_line,line);
+
+			/*checking if line is an empty line*/
+			if( strlen(line) == 0 )
+				continue; /*will skip to the next line*/
+		
+			get_word(line,i,word); /*recieving word*/
+			
+			if(is_comment(line))
+			{
+				continue; /*will skip to the next line*/
+			}
+			
+			/*checking if first word is a label definition or external label definition*/
+			if(is_label_def(word,line_number, &ok))
+			{
+				while(line[i] != ':')
+				{
+					i++;
+				}	
+				i++; /*to get to char after ':'*/
+			}
+			
+			get_word(line,i,word); /*recieving word*/
+			
+			if(strcmp(word,".entry") == 0)
+			{
+				while(line[i] != 'y')
+				{
+					i++;
+				}
+				i++;
+				
+				get_word(line,i,word);
+				
+				if(is_label(word))
+				{
+					if(label_check(word))
+					{
+						if(!update_symbol_entry(symbol,word,line_number))
+							ok = 0;
+					}
+					else
+					{
+						printf("\nERROR (line %d): symbol name is a defined command/register name", line_number);
+						ok = 0;
+					}
+				}
+				else
+				{
+					printf("\nERROR (line %d): word after entry command is not a symbol", line_number);
+					ok = 0;
+				}	
+			}
+			continue;		
+		}
+	}
+
+	fclose(fd);
+			
 	/*print_symbol_list(symbol);
 	print_command_list(command);
 	print_data_list(data);*/
@@ -1002,26 +1078,108 @@ void write_ob_file(FILE* ob_file, command_struct * command,data_struct * data, s
 void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_struct* symbol)
 {
 	int num, succeded, address = command->address, i;
-	unsigned int word = 0, temp=0;
-	symbol_struct* cur_symbol = symbol;
+	unsigned int word = 0;
+	/*symbol_struct* cur_symbol;*/
 	/*arrange the bits of the command
-	are - if its A - absolut, E - External, R - Relocatable*/
+	A - absolut = 0x40000, E - External = 0x20000, R - Relocatable = 0x10000*/
 	word = word | 0x40000 ;
 	word |= 1 << command->commandInfo->oppCode ;
 	write_word(ob_file, address, word);
 
 	if(command->commandInfo->argumentInfosNum != 0)
 		{
+			address++;
 			word = word & 0x40000 ;
 			if( command->commandInfo->funct != 0 )
 				word |= command->commandInfo->funct << 12;
-			if( command->arguments_num ==2 );
-				/*TODO continue here */ 
+			if( command->arguments_num == 2 )
+				{	
+					/* SOURCE */
+					if( command->arguments[0].addressingMode == REGISTER )
+						{
+							num = get_number_from_string(command->arguments[0].argument_str, &succeded);
+							word |= num << 8;
+						}
+					num = command->arguments[0].addressingMode;
+					word |= num << 6;
+					/* TARGET */
+					if( command->arguments[1].addressingMode == REGISTER )
+						{
+							num = get_number_from_string(command->arguments[1].argument_str, &succeded);	
+							word |= num << 2;
+						}
+					num = command->arguments[1].addressingMode;
+					word |= num;
+
+					write_word(ob_file, address, word);
+				}
+			
+
+			if( command->arguments_num == 1 )
+				{
+					/* TARGET */
+					if( command->arguments[0].addressingMode == REGISTER )
+						{
+							num = get_number_from_string(command->arguments[0].argument_str, &succeded);	
+							word |= num << 2;
+						}
+					num = command->arguments[0].addressingMode;
+					word |= num;
+
+					write_word(ob_file, address, word);
+				}
+		
+				/*arrange the arguments bits*/
+				for (i = 0; i < command->arguments_num; i++)
+					{
+						word = 0;
+						address++;
+						switch (command->arguments[i].addressingMode)
+						{
+							case REGISTER:
+								break;
 				
+							case IMMEDIETE:
+								word = word | 0x40000 ;
+								num = get_number_from_string(command->arguments[i].argument_str, &succeded);
+								word |= num;
+								write_word(ob_file, address, word);
+								break;
+
+							case INDEX:
+								/*cur_symbol = find_symbol(command->arguments[i].argument_str, symbols);
+
+								if (symbol->kinds & EXERNAL_SYMBOLKIND)
+								{
+									word = 0;
+									are = 'E';
+								}
+								else
+								{
+									word =(symbol->value - command->address);
+									word-=1;
+									are = 'A';
+								}*/
+								break;
+
+							case DIRECT:
+								/*symbol = find_symbol(command->arguments[i].argument_str, symbols);
+								if (symbol->kinds & EXERNAL_SYMBOLKIND)
+								{
+									word = 0;
+									are = 'E';
+								}
+								else
+								{
+									word = symbol->value;
+									are = 'R';
+								}*/
+								break;
+						}
+					
+				} 
+
 		}
-
-	
-
 	
 }
 
@@ -1036,7 +1194,19 @@ void write_word(FILE* file, int address, unsigned int word)
 	D = word & 0xf0;
 	E = word & 0xf;
 	/* the "& 0xfff" for get only 3 bytes */
-	fprintf(file, "%04d A%X-B%X-C%X-D%X-E%X \n", address, A>>16 , B>>12, C>>8, D>>4, E);
+	fprintf(file, "%04d A%x-B%x-C%x-D%x-E%x \n", address, A>>16 , B>>12, C>>8, D>>4, E);
 }
 
+/*find symbol name in the list of symbols*/
+symbol_struct* find_symbol(char* name,  symbol_struct * symbol)
+{
+	symbol_struct* cur = symbol;
+	while(cur)
+		{
+			if (strcmp(cur->name,name) == 0)
+				return cur;
+			cur = cur->next;
+		}
+	return NULL;
+}
 
