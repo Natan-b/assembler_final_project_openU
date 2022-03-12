@@ -1220,6 +1220,7 @@ void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_str
 								word = word | 0x40000 ;
 								num = get_number_from_string(command->arguments[i].argument_str, &succeded);
 								word |= num;
+								word = word & 0x4ffff ;
 								address++;
 								write_word(ob_file, address, word);
 								break;
@@ -1408,6 +1409,7 @@ void write_data_to_ob_file(FILE* ob_file, data_struct* cur_data)
 		{
 			word = word & 0x40000 ;
 			word |= cur_data->int_values[i];
+			word = word & 0x4ffff ;
 			write_word(ob_file, cur_data->address + i, word);
 		}
 		break;	
