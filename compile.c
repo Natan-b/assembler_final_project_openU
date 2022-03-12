@@ -62,15 +62,15 @@ char line[MAX_ONE_LINE];
 char word[MAX_WORD];
 char preprocess_file_name[MAX_NAME_FILE];
 char ob_file_name[MAX_NAME_FILE];
-/*char ext_file_name[MAX_NAME_FILE];
-char ent_file_name[MAX_NAME_FILE];*/
+char ext_file_name[MAX_NAME_FILE];
+char ent_file_name[MAX_NAME_FILE];
 int i;
 int label_flag;
 int line_number = 0; /*count line from file to print if line have error*/
 int IC = 100;
 int DC = 0;
 int ok = 1;
-FILE * fd,* ob_file/*, *ext_file, *ent_file*/;
+FILE * fd,* ob_file, *ext_file, *ent_file;
 
 
 /*creatinf symbol,command and data lists*/
@@ -242,9 +242,9 @@ rewind(fd);
 	if(!check_command_symbols(command,symbol,line_number))
 		ok = 0;
 	
-	/*print_symbol_list(symbol);
+	print_symbol_list(symbol);
 	print_command_list(command);
-	print_data_list(data);*/
+	print_data_list(data);
 
 	if(ok)
 		{
@@ -259,6 +259,32 @@ rewind(fd);
 			else
 				{
 					printf("OB file %s cannot be created\n", ob_file_name);
+				}
+
+			/* write the ext file */
+			sprintf(ext_file_name, "%s.ext", file_name);
+			ext_file = fopen(ext_file_name, "w");
+			if (ext_file != NULL)
+				{
+					write_ext_file(ext_file, command, symbol);
+					fclose(ext_file);
+				}
+			else
+				{
+					printf("EXT file %s cannot be created\n", ext_file_name);
+				}
+
+			/* write the ent file */
+			sprintf(ent_file_name, "%s.ent", file_name);
+			ent_file = fopen(ent_file_name, "w");
+			if (ent_file != NULL)
+				{
+					write_ent_file(ent_file, symbol);
+					fclose(ent_file);
+				}
+			else
+				{
+					printf("ENT file %s cannot be created\n", ent_file_name);
 				}
 		}
 
@@ -1065,9 +1091,10 @@ int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 }
 
 /*create the ob file and call the print to file methode*/
-void write_ob_file(FILE* ob_file, command_struct * command,data_struct * data, symbol_struct * symbol)
+void write_ob_file(FILE* ob_file, command_struct * command, data_struct * data, symbol_struct * symbol)
 {
 	command_struct * cur_command = command;
+	data_struct * cur_data = data;
 
 	int command_size=0, data_size = 0;
 	while(cur_command->next != NULL)
@@ -1088,6 +1115,16 @@ void write_ob_file(FILE* ob_file, command_struct * command,data_struct * data, s
 				{
 					write_command_to_ob_file(ob_file, cur_command, symbol);
 					cur_command = cur_command->next;
+				}
+	
+		}
+
+	if( cur_data->str_value[0] != '\0' || cur_data->int_values[0] != 0 )
+		{
+			while( cur_data ) 
+				{
+					write_data_to_ob_file(ob_file, cur_data);
+					cur_data = cur_data->next;
 				}
 		}
 
@@ -1307,3 +1344,84 @@ int check_command_symbols (command_struct * command, symbol_struct * symbol, int
 	return 1;
 }
 
+
+/*create and write the ent file*/
+void write_ent_file(FILE* ent_file, symbol_struct * symbol)
+{
+	symbol_struct* cur = symbol;
+	while( cur != NULL)
+		{
+			if (cur->kind == CODE_ENTRY_SYMBOLKIND || cur->kind == DATA_ENTRY_SYMBOLKIND)
+				fprintf(ent_file, "%s,%d,%d\n", cur->name, cur->base_address , cur->offset);
+			cur = cur->next;
+		}
+	
+}
+
+/*create and write the ext file*/
+void write_ext_file(FILE* ext_file, command_struct * command, symbol_struct * symbol)
+{
+	
+	command_struct* cur_command = command;
+	symbol_struct* cur_symbol = symbol;
+	int i;
+
+	while( cur_command != NULL)
+		{
+			for(i=0; i < cur_command->arguments_num;i++) /*checking each argument*/
+				{
+					if(cur_command->arguments[i].addressingMode == DIRECT) /*if potential symbol*/
+						{
+							cur_symbol = find_symbol(cur_command->arguments[i].argument_str, symbol);	
+							if( cur_symbol->kind == EXERNAL_SYMBOLKIND )
+								{
+									if( i == 0)
+										{
+											fprintf(ext_file, "%s BASE %d\n", cur_symbol->name, cur_command->address + i + 2);
+											fprintf(ext_file, "%s OFFSET %d\n\n", cur_symbol->name, cur_command->address + i + 3);
+										}
+									else
+										{
+											fprintf(ext_file, "%s BASE %d\n", cur_symbol->name, cur_command->address + i + 1);
+											fprintf(ext_file, "%s OFFSET %d\n\n", cur_symbol->name, cur_command->address + i + 2);
+										}
+								}
+						}
+				}
+			
+			cur_command = cur_command->next;
+		}
+}
+
+/*simple as call*/
+void write_data_to_ob_file(FILE* ob_file, data_struct* cur_data)
+{
+	unsigned int word = 0;
+	int i;
+
+	word = word | 0x40000 ;
+
+	switch (cur_data->kind)
+	{
+	case DATA_DATAKIND:
+		for (i = 0; i < cur_data->int_values_num; i++)
+		{
+			word = word & 0x40000 ;
+			word |= cur_data->int_values[i];
+			write_word(ob_file, cur_data->address + i, word);
+		}
+		break;	
+	case STRING_DATAKIND:
+		for (i = 0; i < cur_data->int_values_num -1; i++)
+		{
+			word = word & 0x40000 ;
+			word |= cur_data->str_value[i];
+			write_word(ob_file, cur_data->address + i, word);
+		}
+		word = word & 0x40000 ;
+		write_word(ob_file, cur_data->address + i , word);
+		break;
+	default:
+		break;
+	}
+}

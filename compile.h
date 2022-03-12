@@ -32,6 +32,9 @@ void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_str
 void write_word(FILE* file, int address, unsigned int word);
 symbol_struct* find_symbol(char* name, symbol_struct * symbol);
 int check_command_symbols (command_struct * command, symbol_struct * symbol, int line_number);
+void write_ent_file(FILE* ent_file, symbol_struct * symbol);
+void write_ext_file(FILE* ext_file, command_struct * command, symbol_struct * symbol);
+void write_data_to_ob_file(FILE* ob_file, data_struct* cur_data);
 
 
 #endif
