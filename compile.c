@@ -237,7 +237,11 @@ rewind(fd);
 	}
 
 	fclose(fd);
-			
+		
+	/*checking that all symbols in command lines are existing symbols in symbol list*/
+	if(!check_command_symbols(command,symbol,line_number))
+		ok = 0;
+	
 	/*print_symbol_list(symbol);
 	print_command_list(command);
 	print_data_list(data);*/
@@ -827,6 +831,22 @@ int symbol_and_register_is_ligal(char* word)
 	return 1;
 }
 
+void get_symbol_and_register(char* word, char* register_str, char* symbol_str)
+{
+	int i=0;
+	int j=0;
+	while(word[i] != '\0' && word[i] != '[')
+		symbol_str[j++]=word[i++];	
+	symbol_str[j]='\0';
+
+	j=0;
+	i++;
+
+	while( word[i] != ']' && word[i] != '\0')
+		register_str[j++] = word[i++];
+	register_str[j]='\0';
+}
+
 int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_number, int * DC)
 {
 	int count = 0;
@@ -1066,7 +1086,7 @@ void write_ob_file(FILE* ob_file, command_struct * command,data_struct * data, s
 		{
 			while( cur_command->next != NULL && cur_command->address != 0)
 				{
-					write_command_to_ob_file(ob_file, command, symbol);
+					write_command_to_ob_file(ob_file, cur_command, symbol);
 					cur_command = cur_command->next;
 				}
 		}
@@ -1079,9 +1099,11 @@ void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_str
 {
 	int num, succeded, address = command->address, i;
 	unsigned int word = 0;
-	/*symbol_struct* cur_symbol;*/
+	char index_symbol_str[SYMBOL_MAX_LEN];
+	char index_register_str[MAX_REGISTER_LEN];
+	symbol_struct* cur_symbol;
 	/*arrange the bits of the command
-	A - absolut = 0x40000, E - External = 0x20000, R - Relocatable = 0x10000*/
+	A - absolut = 0x40000, R - Relocatable = 0x20000, E - External = 0x10000*/
 	word = word | 0x40000 ;
 	word |= 1 << command->commandInfo->oppCode ;
 	write_word(ob_file, address, word);
@@ -1100,12 +1122,24 @@ void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_str
 							num = get_number_from_string(command->arguments[0].argument_str, &succeded);
 							word |= num << 8;
 						}
+					if( command->arguments[0].addressingMode == INDEX )
+						{
+						 	get_symbol_and_register(command->arguments[0].argument_str, index_register_str, index_symbol_str);
+							num = get_number_from_string(index_register_str, &succeded);
+							word |= num << 8;
+						}
 					num = command->arguments[0].addressingMode;
 					word |= num << 6;
 					/* TARGET */
 					if( command->arguments[1].addressingMode == REGISTER )
 						{
 							num = get_number_from_string(command->arguments[1].argument_str, &succeded);	
+							word |= num << 2;
+						}
+					if( command->arguments[1].addressingMode == INDEX )
+						{
+						 	get_symbol_and_register(command->arguments[1].argument_str, index_register_str, index_symbol_str);
+							num = get_number_from_string(index_register_str, &succeded);
 							word |= num << 2;
 						}
 					num = command->arguments[1].addressingMode;
@@ -1123,17 +1157,23 @@ void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_str
 							num = get_number_from_string(command->arguments[0].argument_str, &succeded);	
 							word |= num << 2;
 						}
+					if( command->arguments[0].addressingMode == INDEX )
+						{
+						 	get_symbol_and_register(command->arguments[0].argument_str, index_register_str, index_symbol_str);
+							num = get_number_from_string(index_register_str, &succeded);
+							word |= num << 2;
+						}
 					num = command->arguments[0].addressingMode;
 					word |= num;
 
 					write_word(ob_file, address, word);
 				}
 		
-				/*arrange the arguments bits*/
-				for (i = 0; i < command->arguments_num; i++)
+			/*arrange the arguments bits*/
+			for (i = 0; i < command->arguments_num; i++)
 					{
 						word = 0;
-						address++;
+						
 						switch (command->arguments[i].addressingMode)
 						{
 							case REGISTER:
@@ -1143,37 +1183,70 @@ void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_str
 								word = word | 0x40000 ;
 								num = get_number_from_string(command->arguments[i].argument_str, &succeded);
 								word |= num;
+								address++;
 								write_word(ob_file, address, word);
 								break;
 
 							case INDEX:
-								/*cur_symbol = find_symbol(command->arguments[i].argument_str, symbols);
+								cur_symbol = find_symbol(index_symbol_str, symbol);
 
-								if (symbol->kinds & EXERNAL_SYMBOLKIND)
+								if (cur_symbol->kind == EXERNAL_SYMBOLKIND)
 								{
-									word = 0;
-									are = 'E';
+									/* EXERNAL */
+									word = word | 0x10000 ;
+									address++;
+									write_word(ob_file, address, word);
+									address++;
+									write_word(ob_file, address, word);
+									
 								}
 								else
 								{
-									word =(symbol->value - command->address);
-									word-=1;
-									are = 'A';
-								}*/
+									/* Relocatable */
+
+									/* base_address */
+									word = word | 0x20000 ;
+									word |= cur_symbol->base_address;
+									address++;						
+									write_word(ob_file, address, word);
+									
+									/* offset */
+									word = word & 0x20000 ;
+									word |= cur_symbol->offset;
+									address++;
+									write_word(ob_file, address, word);
+								}
 								break;
 
 							case DIRECT:
-								/*symbol = find_symbol(command->arguments[i].argument_str, symbols);
-								if (symbol->kinds & EXERNAL_SYMBOLKIND)
+								cur_symbol = find_symbol(command->arguments[i].argument_str, symbol);
+								if (cur_symbol->kind == EXERNAL_SYMBOLKIND)
 								{
-									word = 0;
-									are = 'E';
+									/* EXERNAL */
+									word = word | 0x10000 ;
+									address++;
+									write_word(ob_file, address, word);
+									address++;
+									write_word(ob_file, address, word);
+									
 								}
 								else
 								{
-									word = symbol->value;
-									are = 'R';
-								}*/
+									/* Relocatable */
+
+									/* base_address */
+									word = word | 0x20000 ;
+									word |= cur_symbol->base_address;
+									address++;
+									write_word(ob_file, address, word);
+									
+					
+									/* offset */
+									word = word & 0x20000 ;
+									word |= cur_symbol->offset;
+									address++;
+									write_word(ob_file, address, word);
+								}
 								break;
 						}
 					
@@ -1208,5 +1281,29 @@ symbol_struct* find_symbol(char* name,  symbol_struct * symbol)
 			cur = cur->next;
 		}
 	return NULL;
+}
+
+/*this function will check if potentail symbold in command line exist in symbol list*/
+int check_command_symbols (command_struct * command, symbol_struct * symbol, int line_number)
+{
+	command_struct * cur = command;
+	int i;
+	
+	while(cur)
+	{
+		for(i=0; i<cur->arguments_num;i++) /*checking each argument*/
+		{
+			if(cur->arguments[i].addressingMode == DIRECT) /*if potential symbol*/
+			{
+				if(!find_symbol(cur->arguments[i].argument_str,symbol)) /*looking for symbol in symbol list*/
+				{
+					printf("\nERROR (line %d): symbol in command line does not exist in symbol list", line_number);
+					return 0;
+				}
+			}
+		}
+		cur = cur->next; 
+	}
+	return 1;
 }
 
