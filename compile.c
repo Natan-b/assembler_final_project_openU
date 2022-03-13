@@ -866,7 +866,7 @@ void get_symbol_and_register(char* word, char* register_str, char* symbol_str)
 	symbol_str[j]='\0';
 
 	j=0;
-	i++;
+	i+=2;
 
 	while( word[i] != ']' && word[i] != '\0')
 		register_str[j++] = word[i++];
