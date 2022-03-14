@@ -4,7 +4,7 @@
 #define MAX_NAME_FILE 20
 /* max line length */
 #define MAX_ONE_LINE 1000
-#define MAX_WORD 40
+#define MAX_WORD 1000
 #define SYMBOL_MAX_LEN 31
 #define MAX_REGISTER_LEN 6
 /* max argument length */

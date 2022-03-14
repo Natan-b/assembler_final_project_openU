@@ -16,8 +16,9 @@ int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	symbol_struct * new;
 	/*removing ':' sign from symbol (if there is one)*/
 	
-		if(s_name[strlen(s_name)-1] == ':')
-			s_name[strlen(s_name)-1] = '\0';
+	if(s_name[strlen(s_name)-1] == ':')
+		s_name[strlen(s_name)-1] = '\0';
+		
 	
 	/*if list is a single node*/
 	if(cur->next == NULL)
@@ -84,7 +85,6 @@ int insert_data(data_struct * data, char * label, char * str, int * values, int 
 		data_struct * cur = data;
 		/*creating pointer to new struct*/
 		data_struct * new;
-
 
 		/*if list is a single node*/
 		if(cur->next == NULL)

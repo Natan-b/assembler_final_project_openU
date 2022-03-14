@@ -60,7 +60,7 @@ typedef struct
 typedef struct Data_struct * data_ptr;
 typedef struct Data_struct {
 	/*name (if no have symbol->\0)*/
-	char name[SYMBOL_MAX_LEN]; 
+	char name[MAX_ONE_LINE]; 
 	/*the string (if ist string)*/
 	char str_value[MAX_ONE_LINE];
 	/*the int value (if data)*/
