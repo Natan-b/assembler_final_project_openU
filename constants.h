@@ -15,8 +15,8 @@
 #define ADDRESSING_MODES_NUM 4
 /* max number of integers in .data */
 #define MAX_INTS_IN_DATA 40
-
-
+/* max number for immediate is 16 bit wide = 65536*/
+#define THRESHOLD_IMMEDIATE_NUM 65535
 
 
 /*command types enum*/

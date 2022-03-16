@@ -586,7 +586,7 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 
 int analyze_cmd(command_struct * command, char * line, char * word, int line_number,int label_flag, int * IC)
 {
-int i =0;
+int i =0,j,k, found;
 CommandInfo* commandInfo;
 command_struct* temp = command;
 
@@ -617,11 +617,38 @@ while(temp->next!=NULL)
 if(!(fill_arguments(line_number, (line + i), temp)))
 	return 0;
 
+/* check for bad numbers of adressing mode*/
 if(commandInfo-> argumentInfosNum != temp->arguments_num)
 	{
 		printf("\nERROR (line %d): Too many/less arguments in command '%s' \n", line_number, word);
 		return 0;	
 	}
+
+/* check for bad adressing mode referd for target and surse*/
+for(j=0; j < temp->arguments_num ; j++)
+	{
+		found=0;
+		for (k = 0; k < commandInfo->argumentInfos[j].legalAddressingModesNum; k++)
+			{
+				if (temp->arguments[j].addressingMode ==
+					commandInfo->argumentInfos[j].legalAddressingModes[k])
+					{
+						found = 1;
+						break;
+					}
+			}
+	if(!found)
+		{
+			printf("\nERROR (line %d): Bad addressing mode for argument \n", line_number);
+			return 0;
+		}
+	}
+
+
+	
+
+
+
 
 insert_command(command,line,commandInfo,temp->arguments_num,&IC,line_number,temp->arguments);
 (*IC) += get_command_size(temp);
@@ -790,7 +817,7 @@ int fill_addressing_mode(argument_struct* argument)
 
 int fill_immediete_addressing_mode(argument_struct* argument)
 {
-	int succeded,i=0;
+	int succeded,num,i=0;
 	if (strlen(argument->argument_str) < 2)
 		return 0;
 	if (argument->argument_str[0] != '#')
@@ -810,7 +837,11 @@ int fill_immediete_addressing_mode(argument_struct* argument)
 				}
 		}
 
-	get_number_from_string(argument->argument_str, &succeded);
+	num = get_number_from_string(argument->argument_str, &succeded);
+	/* max number for immediate is 16 bit wide = 65536*/
+	if( num > THRESHOLD_IMMEDIATE_NUM)
+		return 0;
+
 	if (succeded)
 		argument->addressingMode = IMMEDIETE;
 	return succeded;
