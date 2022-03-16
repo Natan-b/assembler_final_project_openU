@@ -2,6 +2,7 @@
 #define COMPILE_H
 
 #include <stdio.h>
+#include <ctype.h>
 
 /*starts checking file after being processed*/
 void compile_file(char * file_name);

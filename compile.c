@@ -768,10 +768,7 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 /*fill the adrresing mode each command contain*/
 int fill_addressing_mode(argument_struct* argument)
 {
-	if (fill_immediete_addressing_mode(argument))
-	{
-		return 1;
-	}
+	
 	if (fill_register_addressing_mode(argument))
 	{
 		return 1;
@@ -781,6 +778,10 @@ int fill_addressing_mode(argument_struct* argument)
 		return 1;
 	}
 	if (fill_index_addressing_mode(argument))
+	{
+		return 1;
+	}
+	if (fill_immediete_addressing_mode(argument))
 	{
 		return 1;
 	}
@@ -802,7 +803,7 @@ int fill_immediete_addressing_mode(argument_struct* argument)
 		i++;
 
 	for(; i < strlen(argument->argument_str); i++)	
-		{
+		{ 
 			if(!is_number(argument->argument_str[i]))
 				{
 					return 0;
@@ -819,7 +820,9 @@ int fill_immediete_addressing_mode(argument_struct* argument)
 int fill_register_addressing_mode(argument_struct* argument)
 {
 	int num, succeded;
-	if ((strlen(argument->argument_str) != 2) && (strlen(argument->argument_str) != 3))
+	if (strlen(argument->argument_str) == 1) 
+		return 0;
+	if (strlen(argument->argument_str) > 3)
 		return 0;
 	if (argument->argument_str[0] != 'r')
 		return 0;
@@ -840,6 +843,7 @@ int fill_direct_addressing_mode(argument_struct* argument)
 {
 	if (!is_label(argument->argument_str))
 		return 0;
+
 	argument->addressingMode = DIRECT;
 	return 1;
 }
