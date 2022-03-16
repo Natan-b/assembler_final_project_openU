@@ -41,12 +41,17 @@ void check_file(char *file_name)
 	FILE *asembler_file, *preprocess_file; 
 
 	macro_name_node *cur;
+	
+	if(strlen(file_name) <= MAX_NAME_FILE)
+	{
+
 	macro_name_node ** hash_table= malloc(HASHSIZE * sizeof(macro_name_node *));;
 	
 	for(i=0;i<HASHSIZE;i++)
 		hash_table[i]=NULL;
 	
-	
+		
+
 	sprintf(asembler_file_name,"%s.as",file_name);
 	asembler_file = fopen(asembler_file_name,"r");
 
@@ -129,6 +134,7 @@ void check_file(char *file_name)
 
 				}
 		}
+
 	/*print_table(hash_table);*/
 
 	if(hash_table_creat_flag==YES)
@@ -138,6 +144,9 @@ void check_file(char *file_name)
 	fclose(asembler_file);
 	fclose(preprocess_file);
 	compile_file(file_name); /*send to compile.c for compilation*/
+	}
+	else
+		printf("\nERROR : file name '%s' is too long\n", file_name);
 }
 
 int check_line(char *line, char *macro_name, char * word_check)
