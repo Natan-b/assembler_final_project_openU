@@ -735,7 +735,7 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 	int i = 0, j = 0, k;
 
 
-	while (line[i])
+	while (line[i] && j < MAX_ARGUMENTS_NUMBER)
 	{
 		while ((line[i] != '\0') && spaceOrTab(line[i]))
 			i++;
@@ -784,8 +784,18 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 		}
 		j++;
 	}
+
+	while ( spaceOrTab(line[i]))
+			i++;
+	if (line[i]!='\0')
+		{
+			printf("\nERROR (line %d): bad comma in arguments\n", line_number);
+			return 0;
+		}	
+	
 	if (j > 0)
 	{
+		
 		command->arguments_num = j;
 	}
 	return 1;
@@ -921,7 +931,7 @@ int symbol_and_register_is_ligal(char* word)
 		return 0; 
 	i++;
 
-	while( word[i] != ']' && word[i] != '\0')
+	while(is_number(word[i]) == 1 && word[i] != ']' && word[i] != '\0')
 		register_str[j++] = word[i++];
 	register_str[j]='\0';
 
