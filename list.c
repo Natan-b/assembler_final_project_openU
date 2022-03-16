@@ -397,11 +397,11 @@ int update_symbol_entry(symbol_struct * symbol,char * word, int line_number)
 				return 1;
 			}
 			
-			printf("\nERROR (line %d): symbol cannot be an entry and an external kind",line_number);
+			printf("\nERROR (line %d): symbol cannot be an entry and an external kind\n",line_number);
 			return 0;
 		}
 		cur = cur->next;
 	}
-		printf("\nERROR (line %d): symbol not found in existing symbol list",line_number);
+		printf("\nERROR (line %d): symbol not found in existing symbol list\n",line_number);
 		return 0;
 }

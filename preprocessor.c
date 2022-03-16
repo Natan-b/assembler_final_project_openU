@@ -73,7 +73,7 @@ void check_file(char *file_name)
 			/* remove extra whitespaces and tabs */
 			clean_line(line,clear_line);
 
-			if(is_empty_line(line))
+			if(strlen(line) == 0 )
 			continue; /*will skip to the next line*/
 			/* check if line have macro*/
 			macroFlag=check_line(clear_line,macro_name,"macro");

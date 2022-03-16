@@ -7,7 +7,7 @@
 void compile_file(char * file_name);
 void get_word(char *,int i, char *);
 int is_comment(char * line);
-int is_empty_line(char *);
+int is_empty_line(char *, int i);
 int is_label(char * word);
 int is_label_def(char * word, int line_number, int * ok);
 int analyze_label_type(symbol_struct *cs, char * line, char * word, int  line_number, int DC, int IC);

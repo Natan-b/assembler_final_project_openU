@@ -109,7 +109,7 @@ fd = fopen(preprocess_file_name,"r");
 			clean_line(full_line,line);
 
 			/*checking if line is an empty line*/
-			if( strlen(line) == 0 )
+			if(strlen(line) == 0 )
 				continue; /*will skip to the next line*/
 		
 			get_word(line,i,word); /*recieving word*/
@@ -120,11 +120,11 @@ fd = fopen(preprocess_file_name,"r");
 				continue; /*will skip to the next line*/
 			}
 			
+		if(word[strlen(word)-1] == ':')
+		{
 			/*checking if first word is a label definition or external label definition*/
 			if(is_label_def(word,line_number, &ok))
 			{
-				
-
 				if(analyze_label_type(symbol,line,word, line_number,DC,IC))
 					label_flag = 1;
 				else
@@ -139,13 +139,20 @@ fd = fopen(preprocess_file_name,"r");
 					i++;
 				}
 				i++; 
-		
-				get_word(line,i,word); /*getting next word in line*/
 				
+				if(is_empty_line(line,i))
+				{
+					printf("\nERROR (line %d): label without data or code is not allowed\n", line_number);
+					ok = 0;
+					continue;
+				}
 				
+				get_word(line,i,word); /*getting next word in line*/	
 			}
-			
-			
+			else
+			continue;
+		}
+				
 			if(word[0] == '.')
 			{
 				ok = ok & analyze_data(data,line,word,line_number,label_flag,symbol,&DC);
@@ -164,14 +171,11 @@ fd = fopen(preprocess_file_name,"r");
 		
 rewind(fd);
 	/* now performing second check */
-	if(ok)
-	{
-	
+	line_number = 0;
 	while(1)
 		{
 			
 			i=0;
-			line_number = 0;
 			label_flag = 0;		
 			/* get new line from the file */
 			fgets(full_line,MAX_ONE_LINE,fd);
@@ -194,7 +198,7 @@ rewind(fd);
 			}
 			
 			/*checking if first word is a label definition or external label definition*/
-			if(is_label_def(word,line_number, &ok))
+			if(word[strlen(word)-1] == ':')
 			{
 				while(line[i] != ':')
 				{
@@ -236,7 +240,7 @@ rewind(fd);
 			}
 			continue;		
 		}
-	}
+	
 
 	fclose(fd);
 		
@@ -338,9 +342,15 @@ int is_comment(char * line)
 
 
 /*function will check if line is an empty line*/
-int is_empty_line(char * line)
+int is_empty_line(char * line, int i)
 {
-	if(line[0] == '\n')
+
+	while(spaceOrTab(line[i]))
+	{
+		i++;
+	}
+	
+	if(line[i] == '\0')
 		return 1;
 	else
 		return 0;
@@ -369,9 +379,16 @@ int is_label_def(char * word, int line_number, int * ok)
 				*ok = 0;
 				return 0;
 			}
+		}
+		else
+		{	
+			printf("\nERROR (line %d): ilegal symbol name\n", line_number);
+			*ok = 0;
+			return 0;
 		}	
-			return 0;	
 	}
+	printf("\nERROR (line %d): ilegal symbol name\n", line_number);
+	*ok = 0;
 	return 0;
 }
 
@@ -469,13 +486,13 @@ int analyze_label_type(symbol_struct *symbol, char * line, char * label, int lin
 			
 		if(strcmp(word_2,".extern") == 0)
 		{
-			printf("\nWARNING (line %d): .extern command apears after label definition\n", line_number);
+			printf("\nWARNING (line %d): label definition cannot appear before external command\n", line_number);
 			return 1;
 		}
 		
-		if(strcmp(word_2,".enrty") == 0)
+		if(strcmp(word_2,".entry") == 0)
 		{
-			printf("\nWARNING (line %d): .entry command apears after label definition\n", line_number);
+			printf("\nWARNING (line %d): label definition cannot appear before entry command \n", line_number);
 			return 1;
 		}
 			
@@ -561,7 +578,7 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 				return 0;
 		}
 		
-		printf("\nERROR (line %d): unknown command\n", line_number);
+		printf("\nERROR (line %d): '%s' is unknown command\n", line_number, word);
 		return 0;
 		
 	}
@@ -600,7 +617,11 @@ while(temp->next!=NULL)
 if(!(fill_arguments(line_number, (line + i), temp)))
 	return 0;
 
-
+if(commandInfo-> argumentInfosNum != temp->arguments_num)
+	{
+		printf("\nERROR (line %d): Too many/less arguments in command '%s' \n", line_number, word);
+		return 0;	
+	}
 
 insert_command(command,line,commandInfo,temp->arguments_num,&IC,line_number,temp->arguments);
 (*IC) += get_command_size(temp);
@@ -715,6 +736,13 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 			i++;
 		}
 		command->arguments[j].argument_str[k] = '\0';
+
+		if(strlen(command->arguments[j].argument_str) > SYMBOL_MAX_LEN)
+			{
+				printf("\nERROR (line %d): Ilegal argument\n", line_number);
+				return 0;
+			}
+
 		if (strlen(command->arguments[j].argument_str) == 0)
 		{
 			printf("\nERROR (line %d): Empty argument\n", line_number);
@@ -761,7 +789,7 @@ int fill_addressing_mode(argument_struct* argument)
 
 int fill_immediete_addressing_mode(argument_struct* argument)
 {
-	int succeded;
+	int succeded,i=0;
 	if (strlen(argument->argument_str) < 2)
 		return 0;
 	if (argument->argument_str[0] != '#')
@@ -770,6 +798,17 @@ int fill_immediete_addressing_mode(argument_struct* argument)
 	move_left(argument->argument_str, 1);
 	/* not use the returned value because this is just a check
 	if there is a number in argument */
+	if(argument->argument_str[0] == '-' || argument->argument_str[0] == '+')
+		i++;
+
+	for(; i < strlen(argument->argument_str); i++)	
+		{
+			if(!is_number(argument->argument_str[i]))
+				{
+					return 0;
+				}
+		}
+
 	get_number_from_string(argument->argument_str, &succeded);
 	if (succeded)
 		argument->addressingMode = IMMEDIETE;
@@ -808,7 +847,7 @@ int fill_direct_addressing_mode(argument_struct* argument)
 int fill_index_addressing_mode(argument_struct* argument)
 {
 	
-	if (strlen(argument->argument_str) < 6)
+	if (strlen(argument->argument_str) < MAX_REGISTER_LEN)
 		return 0;
 		
 	if( !(symbol_and_register_is_ligal(argument->argument_str)))
@@ -835,6 +874,8 @@ int symbol_and_register_is_ligal(char* word)
 
 	if(!(is_label(symbol_str)))
 		return 0;
+	if(!(label_check(symbol_str)))
+		return 0;
 	j=0;
 	
 	if(word[i] != '[')
@@ -855,7 +896,7 @@ int symbol_and_register_is_ligal(char* word)
 
 	if ((num < 10) || (num > 15))
 		return 0;
-	
+
 	return 1;
 }
 
@@ -989,7 +1030,7 @@ int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_nu
 		i++;
 	}
 	
-	if(line[i] == '\n')
+	if(line[i] == '\0')
 	{
 		printf("\nERROR (line %d): missing data in line\n", line_number);
 		return 0;
