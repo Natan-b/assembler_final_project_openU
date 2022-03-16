@@ -98,7 +98,7 @@ fd = fopen(preprocess_file_name,"r");
 			if(feof(fd))
 				break;
 			line_number++;
-			if(strlen(full_line) > 81)
+			if(strlen(full_line) > 80)
 			{
 				printf("\nERROR (line %d): ilegal length of line\n", line_number);
 				ok = 0;
