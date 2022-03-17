@@ -18,6 +18,8 @@
 /* max number for immediate is 16 bit wide = 65536*/
 #define THRESHOLD_IMMEDIATE_NUM 65535
 
+#define MAX_MEMORY_NUM 8191
+
 
 /*command types enum*/
 typedef enum CommandType

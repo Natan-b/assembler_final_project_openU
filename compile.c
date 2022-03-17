@@ -168,7 +168,8 @@ fd = fopen(preprocess_file_name,"r");
 	
 	update_symbol_list(symbol,IC);
 	update_data_list(data,IC);
-		
+
+	
 rewind(fd);
 	/* now performing second check */
 	line_number = 0;
@@ -252,6 +253,12 @@ rewind(fd);
 	print_command_list(command);
 	print_data_list(data);
 
+	/*check if memory is too big */
+	if( !(check_memory(data, command)) )
+		{
+			ok = 0;
+			printf("\nERROR : memory space is full\n");
+		}
 	if(ok)
 		{
 			/* write the ob file */
@@ -1514,4 +1521,35 @@ void write_data_to_ob_file(FILE* ob_file, data_struct* cur_data)
 	default:
 		break;
 	}
+}
+
+int check_memory(data_struct* data, command_struct* command)
+{
+	int num=0;
+	data_struct* cur_data = data;
+	command_struct* cur_command = command;
+	/* check if data struct is empty, if it is, check command struct memory size */
+	if((cur_data->str_value[0]=='\0') && (cur_data->int_values[0]==0))
+		{
+			while(cur_command->next != NULL)
+		{
+			num += get_command_size(cur_command);
+			cur_command = cur_command->next;
+		}
+			
+			
+			if( num > MAX_MEMORY_NUM )
+				return 0;
+		}
+	else
+		{
+			while(cur_data->next)
+				cur_data= cur_data->next;
+			num = cur_data->int_values_num + cur_data->address;
+			
+			if( num > MAX_MEMORY_NUM )
+				return 0;
+			
+		}
+	return 1;
 }
