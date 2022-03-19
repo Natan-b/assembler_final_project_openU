@@ -100,17 +100,15 @@ typedef struct command_struct {
 } command_struct;
 
 
-/*create symbol struct function*/
+/*creating and initializing symbol struct*/
 symbol_struct * create_symbol_struct();
 
+/*creating and initializing command struct*/
 command_struct * create_command_struct();
+
+/*creating and initializing data struct*/
 data_struct * create_data_struct();
 
-/*declaration init command struct*/
-/*void init_command_struct(command_struct *);*/
-
-/*declaration init data struct*/
-/*void init_data_struct(data_struct *);*/
 
 
 #endif

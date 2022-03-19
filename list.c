@@ -7,7 +7,7 @@
 #include <string.h>
 
 
-
+/*function adds new symbol node to symbol list*/
 int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 {
 
@@ -79,7 +79,7 @@ int insert_symbol(symbol_struct * cs,char * s_name, int s_value, int atr)
 	
 }
 
-
+/*function inserts data node to list*/
 int insert_data(data_struct * data, char * label, char * str, int * values, int values_num, int DC, DataKind kind)
 {
 		data_struct * cur = data;
@@ -150,6 +150,7 @@ int insert_data(data_struct * data, char * label, char * str, int * values, int 
 	return 1;
 }
 
+/*function inserts command node to list*/
 void insert_command(command_struct * head,char * label,CommandInfo* commandInfo, int arguments_num, int** address,int line_number,struct argument_struct * arguments)
 {
 	command_struct * cur = head;
@@ -210,80 +211,7 @@ void insert_command(command_struct * head,char * label,CommandInfo* commandInfo,
  	}
 }
 
-void print_symbol_list(symbol_struct * cs)
-{
-
-	if(cs->name[0]== '\0')
-	printf("\nSymbol list is empty\n");
-
-	else
-	while(cs)
-	{
-		printf("\n%s\n%d\n%d\n%d\n%d\n",cs->name,cs->value,cs->base_address,cs->offset,cs->kind);
-		cs = cs->next;
-	}
-
-
-}
-
-/*debug printing*/
-void print_command_list(command_struct * head)
-{
-	int i;
-	command_struct * cur = head;
-
-	if( head->address == 0 && head->line_number == 0)
-	printf("\nCommand list is empty\n");
-
-	else
-		{
-			while(cur->next)
-			{
-				printf("\ncommand->label: %s\ncommand->name: %s\ncommand->arguments_num: %d\ncommand->address: %d\ncommand->line_number: %d\n",cur->label,cur->commandInfo->commandName,cur->arguments_num,cur->address,cur->line_number);
-				for(i=0; i < cur->arguments_num; i++)
-					 	printf("\n argument_str->> %s\n addressingMode->> %d\n", cur->arguments[i].argument_str ,cur->arguments[i].addressingMode);
-					
-				cur = cur->next;
-			}
-		}
-
-
-}
-
-void print_data_list(data_struct * head)
-{
-	int i;
-	data_struct * cur = head;
-
-	if((cur->str_value[0]=='\0') && (cur->int_values[0]==0))
-	printf("\nData list is empty\n");
-
-	else
-		{
-			while(cur)
-			{
-				if(cur->kind == 1)
-				{
-					printf("\ndata->name: %s\ndata->str_value: %s\ndata->int_values: -\ndata->int_values_num: %d\ndata->address: %d\n",cur->name,cur->str_value,cur->int_values_num,cur->address);
-				printf("data->kind: %s\n","STRING");
-				}
-				
-				else
-				{
-				printf("\ndata->name: %s\ndata->str_value: -\ndata->int_values: ",cur->name);
-				for(i=0;i<cur->int_values_num;i++)
-				{
-				printf("%d ",cur->int_values[i]);
-				}
-				printf("\ndata->int_values_num: %d\ndata->address: %d\n",cur->int_values_num,cur->address);
-				printf("data->kind: %s\n","DATA");
-				}
-				cur = cur->next;
-			
-		    } 
-       }
-}
-
+/*function frees symbol list*/
 void free_symbol_list(symbol_struct * head)
 {
 	if(head!= NULL)
@@ -300,6 +228,7 @@ void free_symbol_list(symbol_struct * head)
 		}
 }
 
+/*function frees command list*/
 void free_command_list(command_struct * head)
 {
 	if(head!= NULL)
@@ -318,6 +247,8 @@ void free_command_list(command_struct * head)
 				}
 		}
 }
+
+/*function frees data list*/
 void free_data_list(data_struct * head)
 {
 	if(head!= NULL)
@@ -335,6 +266,7 @@ void free_data_list(data_struct * head)
 		}
 }
 
+/*function updates addresses on symbol list*/
 void update_symbol_list(symbol_struct * symbol, int address)
 {
 	symbol_struct * head = symbol;
@@ -351,6 +283,7 @@ void update_symbol_list(symbol_struct * symbol, int address)
 	}
 }
 
+/*function updates addresses on data list*/
 void update_data_list(data_struct * data, int address)
 {
 	data_struct * head = data;
@@ -363,19 +296,21 @@ void update_data_list(data_struct * data, int address)
 	
 }
 
+/*function gets data list size in "words"*/
 int get_data_size(data_struct * data)
 {
-data_struct * head = data;
-int size = 0;
+	data_struct * head = data;
+	int size = 0;
 
-while(head)
-{
-size += head->int_values_num;
-head = head->next;
-}
-return size;
+	while(head)
+	{
+	size += head->int_values_num;
+	head = head->next;
+	}
+	return size;
 }
 
+/*function updates symbol list by confirming and updating symbol entries in file*/
 int update_symbol_entry(symbol_struct * symbol,char * word, int line_number)
 {
 	symbol_struct * cur = symbol;

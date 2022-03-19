@@ -10,7 +10,7 @@
 
 
 
-
+/* index generator for different macro names */
 unsigned int hash(char * macro_name)
 {
 	int length= strlen(macro_name);
@@ -24,36 +24,7 @@ unsigned int hash(char * macro_name)
 	return hash_value;
 }
 
-
-void print_table(macro_name_node ** hash_table)
-{
-	macro_name_node *head;
-	macro_name_node *cur;
-	int i;
-	if(hash_table == NULL) return;
-	for(i=0;i<HASHSIZE;i++)
-		{
-			head = hash_table[i];
-		
-			printf("%d: ",i);
-
-			if(head==NULL)
-				printf("NULL");
-			else
-				{
-					cur = head;
-					while(cur != NULL)
-						{
-							printf("\n%s\n", cur->macro_line);
-							cur = cur->next;
-						}
-				}
-			printf("\n");
-		}	
-}
-
-
-
+/* the func insert the macro line to the right macro name */
 void hash_table_insert(macro_name_node ** hash_table,char * macro_name, char * macro_line)
 {
 	macro_name_node *head;
@@ -80,7 +51,7 @@ void hash_table_insert(macro_name_node ** hash_table,char * macro_name, char * m
 		}
 }
 
-
+/* the func insert the macro line to the macro linked list  */
 void insert_new_line(macro_name_node ** head,char * new_line)
 {
 	macro_name_node * cur = *head;	
@@ -99,7 +70,7 @@ void insert_new_line(macro_name_node ** head,char * new_line)
 
 }
 
-
+/* the func free the hash table */
 void free_hash_table(macro_name_node ** hash_table)
 {
 	if(hash_table!= NULL)

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*creating symbol struct*/
+/*creating and initializing symbol struct*/
 symbol_ptr create_symbol_struct()
 {
 	symbol_struct* symbol = malloc(sizeof(symbol_struct));
@@ -19,6 +19,7 @@ symbol_ptr create_symbol_struct()
 	return symbol;
 }
 
+/*creating and initializing command struct*/
 command_struct * create_command_struct()
 {
 	command_struct* command = malloc(sizeof(command_struct));
@@ -30,7 +31,7 @@ command_struct * create_command_struct()
 	return command;
 }
 
-
+/*creating and initializing data struct*/
 data_struct * create_data_struct()
 {
 	data_struct* data = malloc(sizeof(data_struct));

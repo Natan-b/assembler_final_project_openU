@@ -67,13 +67,13 @@ char ent_file_name[MAX_NAME_FILE];
 int i;
 int label_flag;
 int line_number = 0; /*count line from file to print if line have error*/
-int IC = 100;
-int DC = 0;
+int IC = 100; /*command counter*/
+int DC = 0; /*data counter*/
 int ok = 1;
 FILE * fd,* ob_file, *ext_file, *ent_file;
 
 
-/*creatinf symbol,command and data lists*/
+/*creating symbol,command and data lists*/
 symbol_struct *symbol = create_symbol_struct();
 command_struct *command = create_command_struct();
 data_struct *data = create_data_struct();
@@ -88,7 +88,7 @@ fd = fopen(preprocess_file_name,"r");
 		printf("\ncannot open file %s\n", file_name);
 		return;
 	}
-	printf("start file: %s\n",file_name);
+	
 	while(1)
 		{
 			i=0;
@@ -111,7 +111,9 @@ fd = fopen(preprocess_file_name,"r");
 			/*checking if line is an empty line*/
 			if(strlen(line) == 0 )
 				continue; /*will skip to the next line*/
-		
+			if(is_empty_line(line,i))
+				continue; /*will skip to the next line*/
+
 			get_word(line,i,word); /*recieving word*/
 
 			/*checking if line is a comment line*/
@@ -120,7 +122,7 @@ fd = fopen(preprocess_file_name,"r");
 				continue; /*will skip to the next line*/
 			}
 			
-		if(word[strlen(word)-1] == ':')
+		if(word[strlen(word)-1] == ':') /*potentail label definition*/
 		{
 			/*checking if first word is a label definition or external label definition*/
 			if(is_label_def(word,line_number, &ok))
@@ -140,7 +142,7 @@ fd = fopen(preprocess_file_name,"r");
 				}
 				i++; 
 				
-				if(is_empty_line(line,i))
+				if(is_empty_line(line,i)) /*if there is nothing after the symbol definition*/
 				{
 					printf("\nERROR (line %d): label without data or code is not allowed\n", line_number);
 					ok = 0;
@@ -152,20 +154,20 @@ fd = fopen(preprocess_file_name,"r");
 			else
 			continue;
 		}
+			
 				
 			if(word[0] == '.')
 			{
+				/*analyzing data line*/
 				ok = ok & analyze_data(data,line,word,line_number,label_flag,symbol,&DC);
 			}
 			else
+			/*analyzing command line*/
 			ok = ok & analyze_cmd(command,line,word,line_number,label_flag,&IC);
-			
-				
-			/*printf("\n\nin line %d ok in while: %d",line_number, ok);*/
-			
-			
+						
 		}
-	
+		
+	/*updating addresses on symbol and data list after running through file the first time*/
 	update_symbol_list(symbol,IC);
 	update_data_list(data,IC);
 
@@ -222,8 +224,9 @@ rewind(fd);
 				
 				if(is_label(word))
 				{
-					if(label_check(word))
+					if(label_check(word)) /*checking if isn't regsiter\command name*/
 					{
+						/*checking if entry label exists in symbol list*/
 						if(!update_symbol_entry(symbol,word,line_number))
 							ok = 0;
 					}
@@ -248,10 +251,6 @@ rewind(fd);
 	/*checking that all symbols in command lines are existing symbols in symbol list*/
 	if(!check_command_symbols(command,symbol,line_number))
 		ok = 0;
-	
-	print_symbol_list(symbol);
-	print_command_list(command);
-	print_data_list(data);
 
 	/*check if memory is too big */
 	if( !(check_memory(data, command)) )
@@ -299,26 +298,18 @@ rewind(fd);
 				{
 					printf("ENT file %s cannot be created\n", ent_file_name);
 				}
+		printf("Finish processing assembler file '%s' successfully\n", file_name);
 		}
+	else
+		printf("Finish processing assembler file '%s' with errors\n", file_name);
 
+	/*freeing allocated memory*/
 	free_command_list(command);
 	free_data_list(data);
-	free_symbol_list(symbol);
-	
-	printf("\n=======after free func========\n");	
-	print_data_list(data);
-	print_command_list(command);
-	print_symbol_list(symbol);
-
-	
-	
-	printf("\n\nok is: %d\n",ok);
-	printf("\nnumber of line is file is %d\nfinish file: %s\n",line_number,file_name); /*debug print*/
-	
-	printf("\n\n================================================\n\n");
+	free_symbol_list(symbol);		
 }
 
-/*copying first word from/after index i in 'from' array to 'to' array*/
+/*this function will copy first word from/after index i in 'from' array to 'to' array*/
 void get_word(char * from,int i,char * to)
 {
 	int j = 0;
@@ -363,18 +354,20 @@ int is_empty_line(char * line, int i)
 		return 0;
 }
 
+/*this function will check to see if the given word is a label definition*/
 int is_label_def(char * word, int line_number, int * ok)
 {
 	int i = 0;
+	/*first letter is capital or small letter*/
 	if((word[i] >= 'a' && word[i] <= 'z') || (word[i] >= 'A' && word[i] <= 'Z'))
 	{
 		i++;
-			
+		/*the rest of the chars are letters or numbers*/
 		while((word[i] >= 'a' && word[i] <= 'z') || (word[i] >= 'A' && word[i] <= 'Z') || (word[i] >= '0' && word[i] <= '9'))
 			{
 				i++;
 			}
-			
+		/*check if word ends with ':'*/
 		if(word[i] == ':' && word[i+1] == '\0')
 		{
 			/*checking if symbol is legal length*/
@@ -399,13 +392,15 @@ int is_label_def(char * word, int line_number, int * ok)
 	return 0;
 }
 
+/*this function will check to see if the given word is a label*/
 int is_label(char * word)
 {
 	int i = 0;
+	/*first letter is capital or small letter*/
 	if((word[i] >= 'a' && word[i] <= 'z') || (word[i] >= 'A' && word[i] <= 'Z'))
 	{
 		i++;
-			
+			/*the rest of the chars are letters or numbers*/
 		while((word[i] >= 'a' && word[i] <= 'z') || (word[i] >= 'A' && word[i] <= 'Z') || (word[i] >= '0' && word[i] <= '9'))
 			{
 				i++;
@@ -423,6 +418,7 @@ int is_label(char * word)
 	return 0;
 }
 
+/*function checks to see if given label is not a register\command name*/
 int label_check(char * label)
 {
 int i;
@@ -446,7 +442,7 @@ int i;
 }
 
 
-
+/*function analyzes the type of label before inserting into symbol list*/
 int analyze_label_type(symbol_struct *symbol, char * line, char * label, int line_number, int DC, int IC)
 {
 	int i = 0;
@@ -470,7 +466,7 @@ int analyze_label_type(symbol_struct *symbol, char * line, char * label, int lin
 
 		if(strcmp(word_2,".data") == 0)
 		{
-		
+			/*inserting into symbol list as data symbol kind*/
 			if(insert_symbol(symbol,label,DC,DATA_SYMBOLKIND))
 			return 1;
 			else
@@ -482,6 +478,7 @@ int analyze_label_type(symbol_struct *symbol, char * line, char * label, int lin
 			
 		if(strcmp(word_2,".string") == 0)
 		{
+			/*inserting into symbol list as data symbol kind*/
 			if(insert_symbol(symbol,label,DC,DATA_SYMBOLKIND))
 			return 1;
 			else
@@ -504,6 +501,7 @@ int analyze_label_type(symbol_struct *symbol, char * line, char * label, int lin
 		}
 			
 		/*in any other case it is a code label line*/
+		/*inserting into symbol list as code symbol kind*/
 		if(insert_symbol(symbol,label,IC,CODE_SYMBOLKIND))
 			return 1;
 		else
@@ -513,7 +511,7 @@ int analyze_label_type(symbol_struct *symbol, char * line, char * label, int lin
 		}
 }
 
-
+/*function analyzes possible data line and passes on for further inspection*/
 int analyze_data(data_struct * data ,char * line, char * word, int line_number,int label_flag,symbol_struct * symbol, int * DC)
 {
 	int i =0;
@@ -528,7 +526,7 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 			i++; /*to get to char after ':'*/
 	}
 	
-	/*if is entry label line*/
+	/*if is entry label line will skip*/
 	if(strcmp(word,".entry") == 0)
 		return 1;
 	
@@ -548,6 +546,7 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 		{
 			if(label_check(word))
 			{
+				/*inserting into symbol list as external symbol kind*/
 				if(insert_symbol(symbol,word,0,EXERNAL_SYMBOLKIND))
 					return 1;
 				
@@ -569,6 +568,7 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 	
 	if(strcmp(word,".string") == 0)
 	{
+		/*sending to function for further inspection*/
 		if(analyze_string_cmd(data,line,label_flag,line_number,DC))
 			return 1;
 		else
@@ -579,32 +579,33 @@ int analyze_data(data_struct * data ,char * line, char * word, int line_number,i
 		
 		if(strcmp(word,".data") == 0)
 		{
+			/*sending to function for further inspection*/
 			if(analyze_data_cmd(data,line,label_flag,line_number,DC))
 				return 1;
 			else
 				return 0;
 		}
-		
+		/*if none of the above options then is unknown command error*/
 		printf("\nERROR (line %d): '%s' is unknown command\n", line_number, word);
 		return 0;
 		
 	}
 
-
+/*function analyzes possible coomand line and passes on for further inspection*/
 int analyze_cmd(command_struct * command, char * line, char * word, int line_number,int label_flag, int * IC)
 {
 int i =0,j,k, found;
 CommandInfo* commandInfo;
 command_struct* temp = command;
 
-commandInfo = is_cmd(word);
+commandInfo = is_cmd(word); /*checking if word is listed in command info struct*/
 if(commandInfo == NULL )
 	{
 		printf("\nERROR (line %d): '%s' is unknown command\n", line_number, word);
 		return 0;
 	}
 
-if(label_flag)
+if(label_flag) /*if label appears at beginning of line then skip label*/
 	{
 		while(line[i] != ':')
 		{
@@ -616,12 +617,12 @@ if(label_flag)
 
 while(spaceOrTab(line[i])) i++;
 
-i = i + strlen(word);
+i = i + strlen(word); /*pointing index to arguments after command name*/
 
 while(temp->next!=NULL)
 	temp=temp->next;
 		
-if(!(fill_arguments(line_number, (line + i), temp)))
+if(!(fill_arguments(line_number, (line + i), temp))) /*send to function to fill in the argumaents information*/
 	return 0;
 
 /* check for bad numbers of adressing mode*/
@@ -652,29 +653,24 @@ for(j=0; j < temp->arguments_num ; j++)
 	}
 
 
-	
-
-
-
-
 insert_command(command,line,commandInfo,temp->arguments_num,&IC,line_number,temp->arguments);
 (*IC) += get_command_size(temp);
 return 1;
 }
 
-/*get the size that the command take(lines)*/
+/*function calculates the size in "words" that the given command takes*/
 int get_command_size(command_struct* cur)
 {
 	int size = 0;
 	int i;
-	if (cur->arguments_num == 0)
+	if (cur->arguments_num == 0) /*if there are no argument in command*/
 	{
 		return 1;
 	}
-	if (cur->arguments_num == 1)
+	if (cur->arguments_num == 1) /*if there is only one argument in command*/
 	{	
 		size+=2;
-		switch(cur->arguments[0].addressingMode)
+		switch(cur->arguments[0].addressingMode) /*ckecking argumetnts addressing mode*/
 			{
 				case IMMEDIETE:
 					size += 1;
@@ -695,12 +691,12 @@ int get_command_size(command_struct* cur)
 			}
 		return size;
 	}
-	if (cur->arguments_num == 2)
+	if (cur->arguments_num == 2) /*if there are 2 argument in command*/
 	{
 		size+=2;
 		for(i=0; i < cur->arguments_num; i++)
 			{
-				switch(cur->arguments[i].addressingMode)
+				switch(cur->arguments[i].addressingMode) /*ckecking argumetnts addressing mode*/
 					{
 						case IMMEDIETE:
 							size += 1;
@@ -724,19 +720,20 @@ int get_command_size(command_struct* cur)
 	return 1;
 }
 
+/*function checks if given word is a command name and return the command's information*/
 CommandInfo* is_cmd(char *word)
 {
 int i;
-
+/*running through command info struct and checking if given word matches*/
 for(i=0; i<=15; i++)
 	{
-		if(strcmp(word,commandInfos[i].commandName)==0)
+		if(strcmp(word,commandInfos[i].commandName)==0) 
 			return &commandInfos[i];
 	}
 return NULL;
 }
 
-/*arrange the argument from the line, check for errors*/	
+/*function arranges the arguments from the line and checks for errors*/	
 int fill_arguments(int line_number, char* line, command_struct* command)
 {
 	int i = 0, j = 0, k;
@@ -763,6 +760,7 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 				i++;
 		}
 		k = 0;
+		/* get argument */
 		while ((line[i] != '\0') && !spaceOrTab(line[i]) && (line[i] != ','))
 		{
 			command->arguments[j].argument_str[k] = line[i];
@@ -783,7 +781,7 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 			return 0;
 		}
 		
-
+		/* get the addressing mode for the argument */
 		if (!fill_addressing_mode(&command->arguments[j]))
 		{
 			printf("\nERROR (line %d): Bad addressing mode for argument\n", line_number);
@@ -809,7 +807,7 @@ int fill_arguments(int line_number, char* line, command_struct* command)
 
 }	
 
-/*fill the adrresing mode each command contain*/
+/*function fills the adrresing mode each command line arguments*/
 int fill_addressing_mode(argument_struct* argument)
 {
 	
@@ -832,6 +830,7 @@ int fill_addressing_mode(argument_struct* argument)
 	return 0;
 }
 
+/*function checks if arguments in line are of immediate addressing mode*/
 int fill_immediete_addressing_mode(argument_struct* argument)
 {
 	int succeded,num,i=0;
@@ -864,19 +863,22 @@ int fill_immediete_addressing_mode(argument_struct* argument)
 	return succeded;
 }
 
-/*TODO check that we dont creat more words here */
+/*function checks if arguments in line are of register addressing mode*/
 int fill_register_addressing_mode(argument_struct* argument)
 {
 	int num, succeded;
+	/* registers can be from 'r0' to 'r15' only */
 	if (strlen(argument->argument_str) == 1) 
-		return 0;
+		return 0;	
 	if (strlen(argument->argument_str) > 3)
 		return 0;
 	if (argument->argument_str[0] != 'r')
 		return 0;
+
 	num = get_number_from_string(&argument->argument_str[1], &succeded);
 	if (!succeded)
 		return 0;
+	/* check number for register is ok*/
 	if ((num < 0) || (num > 15))
 		return 0;
 	/*clean and leave just the number of the argument*/
@@ -886,9 +888,10 @@ int fill_register_addressing_mode(argument_struct* argument)
 }
 
 
-
+/*function checks if arguments in line are of direct addressing mode*/
 int fill_direct_addressing_mode(argument_struct* argument)
 {
+	/* check if argument is legal lablbe */
 	if (!is_label(argument->argument_str))
 		return 0;
 
@@ -896,9 +899,10 @@ int fill_direct_addressing_mode(argument_struct* argument)
 	return 1;
 }
 
+/*function checks if arguments in line are of direct addressing mode*/
 int fill_index_addressing_mode(argument_struct* argument)
 {
-	
+	/* check for minimum characrets for index. example: 'X[r10]' */
 	if (strlen(argument->argument_str) < MAX_REGISTER_LEN)
 		return 0;
 		
@@ -910,7 +914,7 @@ int fill_index_addressing_mode(argument_struct* argument)
 }
 
 
-
+/*function checks if symbol and register are legal in direct addressing mode format*/
 int symbol_and_register_is_ligal(char* word)
 {
 	int i=0;
@@ -918,7 +922,8 @@ int symbol_and_register_is_ligal(char* word)
 	int num;
 	char symbol_str[SYMBOL_MAX_LEN];
 	char register_str[MAX_REGISTER_LEN];
-
+	
+	/* get the symbol */
 	while(word[i] != '\0' && word[i] != '[')
 		symbol_str[j++]=word[i++];
 	
@@ -929,7 +934,7 @@ int symbol_and_register_is_ligal(char* word)
 	if(!(label_check(symbol_str)))
 		return 0;
 	j=0;
-	
+	/* get the register */
 	if(word[i] != '[')
 		return 0;
 	i++;
@@ -945,13 +950,14 @@ int symbol_and_register_is_ligal(char* word)
 	if(word[i]!=']')
 		return 0;	
 	num = atoi(register_str);
-
+	/* check the number of the register */
 	if ((num < 10) || (num > 15))
 		return 0;
 
 	return 1;
 }
 
+/*function gets the symbol and register from line (in direct addressing mode format line)*/
 void get_symbol_and_register(char* word, char* register_str, char* symbol_str)
 {
 	int i=0;
@@ -968,6 +974,7 @@ void get_symbol_and_register(char* word, char* register_str, char* symbol_str)
 	register_str[j]='\0';
 }
 
+/*function analyzes string data command before inserting into data list*/
 int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_number, int * DC)
 {
 	int count = 0;
@@ -1013,7 +1020,7 @@ int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_
 	
 	i++;
 	
-	while ((line[i] != '\0') && (line[i] != '"'))
+	while ((line[i] != '\0') && (line[i] != '"')) /*pulling string data from line*/
 	{
 		str[j++] = line[i++];
 		count++;
@@ -1035,10 +1042,10 @@ int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_
 		printf("\nERROR (line %d): extra character after string\n", line_number);
 		return 0;
 	}
-	
+	/*inserting recieved string data into data list*/
 	if(insert_data(data,line,str,NULL,count,*DC,STRING_DATAKIND))
 	{
-		*DC += strlen(str)+1;
+		*DC += strlen(str)+1; /*updating DC counter*/
 		return 1;
 	}
 	else
@@ -1048,6 +1055,7 @@ int analyze_string_cmd(data_struct * data, char * line,int label_flag, int line_
 	}
 }
 
+/*function analyzes data data command before inserting into data list*/
 int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_number, int * DC)
 {
 	int count = 0;
@@ -1087,13 +1095,13 @@ int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_nu
 		printf("\nERROR (line %d): missing data in line\n", line_number);
 		return 0;
 	}
-	
+	/*checks and retrives numbers from data line*/
 	if(fill_numbers(line,i,values,line_number,&count))
 	{
-		
+		/*inserting recieved data into data list*/
 		if(insert_data(data,line,NULL,values,count,*DC,DATA_DATAKIND))
 		{
-			*DC += count;
+			*DC += count; /*updating data counter*/
 			return 1;
 		}
 		else
@@ -1105,8 +1113,7 @@ int analyze_data_cmd(data_struct * data, char * line, int label_flag,int line_nu
 	return 0;
 }
 	
-/*this function will recieve the .data line and extract the numbers inti an int array
-will return 1 if successful, 0 if not*/
+/*this function will recieve the .data line and extract the numbers into an int array*/
 int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 {
 	char num_str[MAX_WORD];
@@ -1127,7 +1134,7 @@ int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 		while (line[i] && spaceOrTab(line[i]))
 			i++;
 			
-		while (line[i] && (line[i] != ',') && !spaceOrTab(line[i])) /*potential number*/
+		while (line[i] && (line[i] != ',') && !spaceOrTab(line[i])) /* extracting potential number*/
 			num_str[j++] = line[i++];
 		
 		while (line[i] && spaceOrTab(line[i]))
@@ -1140,7 +1147,7 @@ int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 			while (line[i] && spaceOrTab(line[i]))
 				i++;
 				
-			if(!line[i]) 
+			if(!line[i]) /*if line ends after comma*/
 			{
 				printf("\nERROR (line %d): ilegal comma at end of data\n", line_number); /*needs to be number after comma*/
 				return 0;
@@ -1185,25 +1192,27 @@ int fill_numbers(char * line, int i, int * values, int line_number, int * count)
 		return 1;
 }
 
-/*create the ob file and call the print to file methode*/
+/*function creates the ob file and calls the print to file methode*/
 void write_ob_file(FILE* ob_file, command_struct * command, data_struct * data, symbol_struct * symbol)
 {
 	command_struct * cur_command = command;
 	data_struct * cur_data = data;
 
 	int command_size=0, data_size = 0;
+	/* get command size */
 	while(cur_command->next != NULL)
 		{
 			command_size += get_command_size(cur_command);
 			cur_command = cur_command->next;
 		}
-
+	/* get data size */
 	data_size = get_data_size(data);
 
 	fprintf(ob_file, "%d %d\n", command_size, data_size);
 
 	cur_command = command;
 
+	/* if command struct not emty, write command to .ob file */
 	if( cur_command->address != 0 )
 		{
 			while( cur_command->next != NULL && cur_command->address != 0)
@@ -1214,6 +1223,7 @@ void write_ob_file(FILE* ob_file, command_struct * command, data_struct * data, 
 	
 		}
 
+	/* if data struct not emty, write command to .ob file */
 	if( cur_data->str_value[0] != '\0' || cur_data->int_values[0] != 0 )
 		{
 			while( cur_data ) 
@@ -1226,7 +1236,7 @@ void write_ob_file(FILE* ob_file, command_struct * command, data_struct * data, 
 }
 
 
-/*arrange the command and argument as wish and call the print method*/
+/*function arranges the command and argument as wish and calls the print method*/
 void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_struct* symbol)
 {
 	int num, succeded, address = command->address, i;
@@ -1390,20 +1400,21 @@ void write_command_to_ob_file(FILE* ob_file, command_struct* command, symbol_str
 }
 
 
-/* write a word to the ob file */
+/*function writes word to the ob file */
 void write_word(FILE* file, int address, unsigned int word)
 {
 	unsigned int A, B ,C, D, E;
+	/* masking */
 	A = word & 0xf0000;
 	B = word & 0xf000;
 	C = word & 0xf00;
 	D = word & 0xf0;
 	E = word & 0xf;
-	/* the "& 0xfff" for get only 3 bytes */
+	
 	fprintf(file, "%04d A%x-B%x-C%x-D%x-E%x \n", address, A>>16 , B>>12, C>>8, D>>4, E);
 }
 
-/*find symbol name in the list of symbols*/
+/*function finds symbol name in the list of symbols and return address*/
 symbol_struct* find_symbol(char* name,  symbol_struct * symbol)
 {
 	symbol_struct* cur = symbol;
@@ -1441,7 +1452,7 @@ int check_command_symbols (command_struct * command, symbol_struct * symbol, int
 }
 
 
-/*create and write the ent file*/
+/*function creates and writes the ent file*/
 void write_ent_file(FILE* ent_file, symbol_struct * symbol)
 {
 	symbol_struct* cur = symbol;
@@ -1454,7 +1465,7 @@ void write_ent_file(FILE* ent_file, symbol_struct * symbol)
 	
 }
 
-/*create and write the ext file*/
+/*function creates and writes the ext file*/
 void write_ext_file(FILE* ext_file, command_struct * command, symbol_struct * symbol)
 {
 	
@@ -1489,7 +1500,7 @@ void write_ext_file(FILE* ext_file, command_struct * command, symbol_struct * sy
 		}
 }
 
-/*simple as call*/
+/*function translates data to ob format and writes it in file*/
 void write_data_to_ob_file(FILE* ob_file, data_struct* cur_data)
 {
 	unsigned int word = 0;
@@ -1523,6 +1534,7 @@ void write_data_to_ob_file(FILE* ob_file, data_struct* cur_data)
 	}
 }
 
+/*function checks if given file exceeeds memeroy capacity in computer*/
 int check_memory(data_struct* data, command_struct* command)
 {
 	int num=0;
@@ -1543,9 +1555,10 @@ int check_memory(data_struct* data, command_struct* command)
 		}
 	else
 		{
-			while(cur_data->next)
+			while(cur_data->next) /*runs until the end of the list*/
 				cur_data= cur_data->next;
-			num = cur_data->int_values_num + cur_data->address;
+				
+			num = cur_data->int_values_num + cur_data->address; /*gets the int of last line of memery*/
 			
 			if( num > MAX_MEMORY_NUM )
 				return 0;

@@ -1,17 +1,21 @@
 #ifndef HASH_H
 #define HASH_H
 
-#define HASHSIZE 100
 #include "struct.h"
+
+#define HASHSIZE 100
+
 
 enum {NOT_FIND,FIND};
 enum {NO,YES};
 
-void print_table(macro_name_node **);
+/* index generator for different macro names */
 unsigned int hash(char*);
-void init_hash_table();
+/* the func insert the macro line to the right macro name */
 void hash_table_insert(macro_name_node **,char * , char *);
+/* the func insert the macro line to the macro linked list  */
 void insert_new_line(macro_name_node **,char *);
+/* the func free the hash table */
 void free_hash_table(macro_name_node **);
 
 

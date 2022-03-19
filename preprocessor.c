@@ -10,21 +10,22 @@
 #include <string.h>
 
 
-/* add free nod list and char words */
 
 
 
+/* get the file name one after the other*/
 void get_files(int number_of_files, char *file_names[])
 {
 	int i=1;
 
-	printf("number of files %d\n", number_of_files-1);
 	while((number_of_files--)>1)
 			check_file(file_names[i++]);
 
 		
 }
 
+
+/* the func gets the .as name file and creat the .am file after layout the macro names in the .am file */
 void check_file(char *file_name)
 {
 	int i;
@@ -70,6 +71,8 @@ void check_file(char *file_name)
 			return;
 		}
 
+	printf("\nStart processing assembler file '%s'\n",file_name);
+
 	while(1)
 		{	
 			/* get new line from the file */
@@ -106,17 +109,22 @@ void check_file(char *file_name)
 				}
 			else
 				{
-					if(hash_table == NULL) /* no macro found */
+					if(hash_table == NULL) 
 						{
+							/* no macro found in .as file*/
 							fputs(clear_line,preprocess_file);
 							fputs("\n",preprocess_file);
 						}
 					else
 						{
+							/* get the index macro is the hash table */
 							index = hash(clear_line);
-							if(hash_table[index] != NULL) /* it is a macro line */
+							/*  check if it is a macro line in the hash table*/
+							if(hash_table[index] != NULL) 
 								{
 									cur = hash_table[index];
+									
+									/* write the macro lines to the .am file */
 									while(cur != NULL)
 										{
 											fputs(cur->macro_line,preprocess_file);
@@ -134,21 +142,22 @@ void check_file(char *file_name)
 
 				}
 		}
-
-	/*print_table(hash_table);*/
-
+	/* free the hash table if created*/
 	if(hash_table_creat_flag==YES)
 			free_hash_table(hash_table);
 	free(*hash_table);		
 
 	fclose(asembler_file);
 	fclose(preprocess_file);
-	compile_file(file_name); /*send to compile.c for compilation*/
+	/*send to compile.c for compilation*/
+	compile_file(file_name); 
 	}
 	else
 		printf("\nERROR : file name '%s' is too long\n", file_name);
 }
 
+
+/* generic func that check if the word_check is in the line */
 int check_line(char *line, char *macro_name, char * word_check)
 {
 	int i,j;
